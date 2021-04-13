@@ -239,8 +239,11 @@ function _ticky_overdue {
 }
 
 function _ticky_backlog {
-	echo "Backlog"
-	# FIXME
+	_ticky_list 'db.tasks.aggregate( [
+			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: false } } },
+			{ $sort: { priority: -1, sortOrder: 1 } },
+			{ $project: { _id: 0, priority: 1, title: 1 } },
+		] )' "Backlog" true
 }
 
 function _ticky_summary {
