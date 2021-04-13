@@ -193,11 +193,12 @@ function _ticky_rest_of_week {
 	_ticky_adjacent_day 3
 	_ticky_adjacent_day 4
 	_ticky_adjacent_day 5
-	_ticky_adjacent_day 6 "" true
+	_ticky_adjacent_day 6
+	_ticky_adjacent_day 7 "" true
 }
 
 function _ticky_later {
-	_ticky_date "{ \$gt: \"$(_adjacent_day 6)\" }" "Later" true
+	_ticky_date "{ \$gt: \"$(_adjacent_day 7)\" }" "Later" true
 }
 
 function _ticky_overdue {
