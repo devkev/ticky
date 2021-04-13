@@ -9,10 +9,13 @@ config_file="${TICKY_CONFIG:-$ticky_dir/config}"
 login_file="${login_file:-$ticky_dir/.login}"
 cookie_file="${cookie_file:-$ticky_dir/.cookie}"
 backup_dir="${backup_dir:-$ticky_dir/backups}"
+batch_file="${batch_file:-$ticky_dir/.batch}"
 
 api_hostname="api.ticktick.com"
 api_base="https://$api_hostname/api/v2/"
 cookie_expiry="2147483647"  # shoot me in 2038
+
+mongodb_endpoint="mongodb://localhost:27017/ticky"
 
 function __gettoken {
 	if type -t jq > /dev/null; then
@@ -53,6 +56,61 @@ function _ticky_backup {
 		xz "$backup_dir/$file"
 	fi
 }
+
+function _ticky_sync {
+
+	checkPoint="$(mongo "$mongodb_endpoint" --quiet --eval 'var c = db.tasks.find({_id:"checkPoint"}); c.hasNext() ? ((cp = c.next()).checkPoint ? cp.checkPoint : NumberLong("0")) : NumberLong("0")' | sed -e 's/^NumberLong("\?//' -e 's/"\?)$//')"
+
+	if [ "$checkPoint" = "" -o "$checkPoint" = "0" ]; then
+		# Full initial sync
+		checkPoint=0
+		# FIXME: get completed tasks
+	fi
+
+	curl --silent --show-error --cookie "$cookie_file" "$api_base"'batch/check/'"$checkPoint" \
+		| tee "$batch_file" \
+		| jq '
+			def xjson($type; $field):
+				if has($field) then ( .[$field] as $orig | .[$field] = {} | .[$field][$type] = $orig ) else . end
+				;
+
+			(
+			.syncTaskBean.update[]
+				| .["_id"] = .id | del(.id)
+				| xjson("$oid"; "_id")
+				| xjson("$oid"; "repeatTaskId")
+				| xjson("$date"; "startDate")
+				| xjson("$date"; "dueDate")
+				| xjson("$date"; "repeatFirstDate")
+				| xjson("$date"; "modifiedTime")
+				| xjson("$date"; "createdTime")
+				| xjson("$date"; "completedTime")
+			)
+			,
+
+			{ "_id": "checkPoint", "checkPoint": .checkPoint }
+			,
+
+			if .inboxId != null then
+				{ "_id": "inboxId", "inboxId": .inboxId }
+			else
+				empty
+			end
+		' \
+		| mongoimport --quiet --mode=upsert --uri "$mongodb_endpoint" -c tasks
+
+	# FIXME: do the upsert of all the stuff, and the update of checkPoint, in a transaction?
+
+	# FIXME: what about .syncTaskBean.delete and .syncTaskBean.add?
+
+	# FIXME: handle `projectProfiles` and `projectGroups`.
+
+	# FIXME: handle `filters` (looks like they have embedded string mql?)
+
+	# FIXME: handle `tags`
+
+}
+
 
 function _ticky_ {
 	_ticky_help "$@"
