@@ -113,15 +113,18 @@ function _ticky_sync {
 
 function _ticky_date {
 	mongo "$mongodb_endpoint" --quiet --eval '
-		var targetdate = "'"$1"'";
+		var targetdate = '"$1"';
 		var heading = "'"$2"'";
+		var trailingBlankLine = '"${3:-false}"';
 		var first = true;
 
 		var ESC = String.fromCharCode(0x1B);
-		var red = ESC + "[31;1m";
-		var green = ESC + "[32m";
-		var normal = ESC + "[0m";
-		var yellow = ESC + "[33m";
+		var normal = ESC + "[0000m";
+		var red = ESC + "[1;31m";
+		var green = ESC + "[0032m";
+		var white = ESC + "[1;37m";
+		var yellow = ESC + "[0033m";
+		var NBSP = String.fromCharCode(0xA0);
 
 		var inboxId = db.tasks.findOne( { _id: "inboxId" } ).inboxId;
 
@@ -132,44 +135,57 @@ function _ticky_date {
 			{ $sort: { isAllDay: 1, dueDate: 1, priority: 1, sortOrder: 1 } },
 			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1 } },
 		] ).forEach(function (task) {
+			var prefix = normal;
+			var suffix = normal;
 			if (first) {
 				first = false;
-				print(heading);
+				if (heading) {
+					print(white + heading + NBSP + NBSP + normal);
+				}
 			}
-			var prefix = "";
-			suffix = "";
 			if (task.priority == 3) {
-				prefix += yellow;
-				suffix += normal;
+				prefix = yellow;
+				suffix = normal;
 			} else if (task.priority == 5) {
-				prefix += red;
-				suffix += normal;
+				prefix = red;
+				suffix = normal;
 			}
 			print(prefix + " □ " + task.title + suffix);
+			//print(prefix + " x " + task.title + suffix);
 		});
-		if (!first) print();
+		if (trailingBlankLine) {
+			print(normal + NBSP + NBSP + normal);
+		}
 		'
 }
 
 function _ticky_today {
-	_ticky_date "$(date "+%Y%m%d")" "TODAY"
+	_ticky_date "\"$(date "+%Y%m%d")\"" "TODAY" true
 }
 
 function _ticky_adjacent_day {
-	_ticky_date "$(date -d "@$(( $(date "+%s") + 86400 * $1 ))" "+%Y%m%d")" "$2"
+	_ticky_date "\"$(date -d "@$(( $(date "+%s") + 86400 * $1 ))" "+%Y%m%d")\"" "$2" "$3"
 }
 
 function _ticky_tomorrow {
-	_ticky_adjacent_day 1 "Tomorrow"
+	_ticky_adjacent_day 1 "Tomorrow" true
 }
 
 function _ticky_yesterday {
-	_ticky_adjacent_day -1 "Yesterday"
+	_ticky_adjacent_day -1 "Yesterday" true
+}
+
+function _ticky_earlier {
+	_ticky_adjacent_day -2 "Earlier"
+	_ticky_adjacent_day -3
+	_ticky_adjacent_day -4
+	_ticky_adjacent_day -5
+	_ticky_adjacent_day -6
+	_ticky_adjacent_day -7 "" true
 }
 
 function _ticky_overdue {
-	echo "Overdue"
-	# FIXME
+	_ticky_date "{ \$lt: \"$(date "+%Y%m%d")\" }" "Overdue" true
 }
 
 function _ticky_backlog {
@@ -181,6 +197,26 @@ function _ticky_summary {
 	_ticky_yesterday
 	_ticky_today
 	_ticky_tomorrow
+}
+
+function _ticky_all {
+	#col1="$(_ticky_yesterday ; _ticky_overdue)"
+	col1="$(_ticky_yesterday ; _ticky_earlier)"
+	col2="$(_ticky_today ; _ticky_tomorrow)"
+
+	col1_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col1")"
+	col2_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col2")"
+
+	paste <(cat <<<"$col1") <(cat <<<"$col2") | expand -t "$(( $col1_width + 3 ))"
+
+#  Backlog  |  Yesterday morning  |  Today morning      |  Rest of week (remaining 5 days)
+#           |  Yesterday daytime  |  Today daytime      |
+#           |  Yesterday evening  |  Today evening      |  Later (next week onwards)
+#           |                     |                     |
+#           |  Overdue            |  Tomorrow morning   |
+#           |                     |  Tomorrow dayime    |
+#           |                     |  Tomorrow evening   |
+
 }
 
 
