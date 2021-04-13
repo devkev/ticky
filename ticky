@@ -276,7 +276,8 @@ _NL='
 pad_blank_line="$(echo -ne '\e[0000m\ua0\ua0\e[0000m')"
 
 function _ticky_all {
-	local width="${1:-50}"
+	local num_columns=4
+	local width="${1:-$(( ${COLUMNS:-200} / $num_columns - 3 ))}"
 
 	col0="$(_ticky_backlog "$width")"
 	col1="$(_ticky_yesterday "$width" ; _ticky_earlier_this_week "$width" ; _ticky_earlier "$width")"
