@@ -163,8 +163,12 @@ function _ticky_today {
 	_ticky_date "\"$(date "+%Y%m%d")\"" "TODAY" true
 }
 
+function _adjacent_day {
+	date -d "@$(( $(date "+%s") + 86400 * $1 ))" "+%Y%m%d"
+}
+
 function _ticky_adjacent_day {
-	_ticky_date "\"$(date -d "@$(( $(date "+%s") + 86400 * $1 ))" "+%Y%m%d")\"" "$2" "$3"
+	_ticky_date "\"$(_adjacent_day "$1")\"" "$2" "$3"
 }
 
 function _ticky_tomorrow {
@@ -184,6 +188,18 @@ function _ticky_earlier {
 	_ticky_adjacent_day -7 "" true
 }
 
+function _ticky_rest_of_week {
+	_ticky_adjacent_day 2 "Rest of week"
+	_ticky_adjacent_day 3
+	_ticky_adjacent_day 4
+	_ticky_adjacent_day 5
+	_ticky_adjacent_day 6 "" true
+}
+
+function _ticky_later {
+	_ticky_date "{ \$gt: \"$(_adjacent_day 6)\" }" "Later" true
+}
+
 function _ticky_overdue {
 	_ticky_date "{ \$lt: \"$(date "+%Y%m%d")\" }" "Overdue" true
 }
@@ -199,15 +215,38 @@ function _ticky_summary {
 	_ticky_tomorrow
 }
 
+_NL='
+'
+pad_blank_line="$(echo -ne '\e[0000m\ua0\ua0\e[0000m')"
+
 function _ticky_all {
 	#col1="$(_ticky_yesterday ; _ticky_overdue)"
 	col1="$(_ticky_yesterday ; _ticky_earlier)"
 	col2="$(_ticky_today ; _ticky_tomorrow)"
+	col3="$(_ticky_rest_of_week ; _ticky_later)"
 
 	col1_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col1")"
 	col2_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col2")"
+	col3_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col3")"
 
-	paste <(cat <<<"$col1") <(cat <<<"$col2") | expand -t "$(( $col1_width + 3 ))"
+	col1_lines="$(wc -l <<<"$col1")"
+	col2_lines="$(wc -l <<<"$col2")"
+	col3_lines="$(wc -l <<<"$col3")"
+
+	max_lines="$(echo -e "$col1_lines\n$col2_lines\n$col3_lines" | awk '{if (m < $1) m = $1} END {print m}')"
+
+	local i
+	for (( i = col1_lines ; i < max_lines ; i++ )); do
+		col1="${col1}$_NL$pad_blank_line"
+	done
+	for (( i = col2_lines ; i < max_lines ; i++ )); do
+		col2="${col2}$_NL$pad_blank_line"
+	done
+	for (( i = col3_lines ; i < max_lines ; i++ )); do
+		col3="${col3}$_NL$pad_blank_line"
+	done
+
+	paste <(cat <<<"$col1") <(cat <<<"$col2") <(cat <<<"$col3") | expand -t "$(( $col1_width + 3 )),+$(( $col2_width + 3 ))"
 
 #  Backlog  |  Yesterday morning  |  Today morning      |  Rest of week (remaining 5 days)
 #           |  Yesterday daytime  |  Today daytime      |
