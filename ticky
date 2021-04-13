@@ -151,8 +151,15 @@ function _ticky_list {
 			if (title.length > maxWidth) {
 				title = title.substr(0, maxWidth - 3) + "...";
 			}
-			print(prefix + " □ " + title + suffix);
-			//print(prefix + " x " + title + suffix);
+			//var bullet = "□";
+			var bullet = "□";
+			//var bullet = "▢";
+			//var bullet = "x";
+			if (task.kind == "CHECKLIST") {
+				bullet = "▤";
+				//bullet = "▣";
+			}
+			print(prefix + " " + bullet + " " + title + suffix);
 		});
 		if (trailingBlankLine) {
 			print(normal + NBSP + NBSP + normal);
@@ -166,7 +173,7 @@ function _ticky_date {
 			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
 			{ $match: { day: '"$1"' } },
 			{ $sort: { day: 1, isAllDay: 1, dueDate: 1, priority: -1, sortOrder: 1 } },
-			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1 } },
+			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1, kind: 1 } },
 		] )' "$2" "$3"
 }
 
@@ -249,7 +256,7 @@ function _ticky_backlog {
 	_ticky_list 'db.tasks.aggregate( [
 			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: false } } },
 			{ $sort: { priority: -1, sortOrder: 1 } },
-			{ $project: { _id: 0, priority: 1, title: 1 } },
+			{ $project: { _id: 0, priority: 1, title: 1, kind: 1 } },
 		] )' "Backlog" true
 }
 
