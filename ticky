@@ -162,8 +162,10 @@ function _ticky_list {
 			var title = task.title;
 			title = title.replace(/\xA0/g, " ");
 			var leading = " " + bullet + " ";
-			if (width > 0 && title.length > width) {
-				title = title.substr(0, width - 3) + "...";
+			while (width > 0 && title.length > width) {
+				print(prefix + leading + title.substr(0, width) + suffix);
+				title = title.substr(width);
+				leading = " " + NBSP + NBSP;
 			}
 			print(prefix + leading + title + suffix);
 		});
