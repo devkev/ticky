@@ -308,6 +308,17 @@ function _ticky_all {
 }
 
 
+function _ticky_watch {
+	local args=()
+	case "$1" in
+		-n|--interval)
+			args+=(--interval "$2")
+			shift 2
+			;;
+	esac
+	watch -t -c "${args[@]}" "$0" "$@"
+}
+
 function _ticky_ {
 	_ticky_help "$@"
 }
