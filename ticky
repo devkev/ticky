@@ -163,8 +163,18 @@ function _ticky_list {
 			title = title.replace(/\xA0/g, " ");
 			var leading = " " + bullet + " ";
 			while (width > 0 && title.length > width) {
-				print(prefix + leading + title.substr(0, width) + suffix);
-				title = title.substr(width);
+				var point = width;
+				while (point > 0 && title.substr(point, 1) != " ") {
+					point--;
+				}
+				if (point == 0) {
+					point = width;
+				}
+				print(prefix + leading + title.substr(0, point) + suffix);
+				while (point < title.length && title.substr(point, 1) == " ") {
+					point++;
+				}
+				title = title.substr(point);
 				leading = " " + NBSP + NBSP;
 			}
 			print(prefix + leading + title + suffix);
