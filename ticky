@@ -111,13 +111,8 @@ function _ticky_sync {
 
 }
 
-function _ticky_date {
+function _ticky_list {
 	mongo "$mongodb_endpoint" --quiet --eval '
-		var targetdate = '"$1"';
-		var heading = "'"$2"'";
-		var trailingBlankLine = '"${3:-false}"';
-		var first = true;
-
 		var ESC = String.fromCharCode(0x1B);
 		var normal = ESC + "[0000m";
 		var red = ESC + "[1;31m";
@@ -128,13 +123,12 @@ function _ticky_date {
 
 		var inboxId = db.tasks.findOne( { _id: "inboxId" } ).inboxId;
 
-		db.tasks.aggregate( [
-			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: true } } },
-			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
-			{ $match: { day: targetdate } },
-			{ $sort: { day: 1, isAllDay: 1, dueDate: 1, priority: -1, sortOrder: 1 } },
-			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1 } },
-		] ).forEach(function (task) {
+		var query = '"$1"';
+		var heading = "'"$2"'";
+		var trailingBlankLine = '"${3:-false}"';
+		var first = true;
+
+		query.forEach(function (task) {
 			var prefix = normal;
 			var suffix = normal;
 			if (first) {
@@ -157,6 +151,16 @@ function _ticky_date {
 			print(normal + NBSP + NBSP + normal);
 		}
 		'
+}
+
+function _ticky_date {
+	_ticky_list 'db.tasks.aggregate( [
+			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: true } } },
+			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
+			{ $match: { day: '"$1"' } },
+			{ $sort: { day: 1, isAllDay: 1, dueDate: 1, priority: -1, sortOrder: 1 } },
+			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1 } },
+		] )' "$2" "$3"
 }
 
 function _ticky_today {
