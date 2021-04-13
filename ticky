@@ -179,13 +179,32 @@ function _ticky_yesterday {
 	_ticky_adjacent_day -1 "Yesterday" true
 }
 
-function _ticky_earlier {
-	_ticky_adjacent_day -2 "Earlier"
+function _ticky_earlier_this_week {
+	_ticky_adjacent_day -2 "Earlier this week"
 	_ticky_adjacent_day -3
 	_ticky_adjacent_day -4
 	_ticky_adjacent_day -5
 	_ticky_adjacent_day -6
 	_ticky_adjacent_day -7 "" true
+}
+
+function _ticky_last_week {
+	_ticky_adjacent_day -8 "Last week"
+	_ticky_adjacent_day -9
+	_ticky_adjacent_day -10
+	_ticky_adjacent_day -11
+	_ticky_adjacent_day -12
+	_ticky_adjacent_day -13
+	_ticky_adjacent_day -14 "" true
+}
+
+function _ticky_earlier {
+	local lines="$(_ticky_date "{ \$lt: \"$(_adjacent_day -7)\" }" "Earlier" true)"
+	read header <<<"$lines"
+	read footer < <(tac <<<"$lines")
+	echo "$header"
+	sed -e '1d;$d' <<<"$lines" | tac
+	echo "$footer"
 }
 
 function _ticky_rest_of_week {
@@ -195,6 +214,16 @@ function _ticky_rest_of_week {
 	_ticky_adjacent_day 5
 	_ticky_adjacent_day 6
 	_ticky_adjacent_day 7 "" true
+}
+
+function _ticky_next_week {
+	_ticky_adjacent_day 8 "Next week"
+	_ticky_adjacent_day 9
+	_ticky_adjacent_day 10
+	_ticky_adjacent_day 11
+	_ticky_adjacent_day 12
+	_ticky_adjacent_day 13
+	_ticky_adjacent_day 14 "" true
 }
 
 function _ticky_later {
@@ -222,7 +251,7 @@ pad_blank_line="$(echo -ne '\e[0000m\ua0\ua0\e[0000m')"
 
 function _ticky_all {
 	#col1="$(_ticky_yesterday ; _ticky_overdue)"
-	col1="$(_ticky_yesterday ; _ticky_earlier)"
+	col1="$(_ticky_yesterday ; _ticky_earlier_this_week ; _ticky_earlier)"
 	col2="$(_ticky_today ; _ticky_tomorrow)"
 	col3="$(_ticky_rest_of_week ; _ticky_later)"
 
