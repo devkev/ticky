@@ -151,11 +151,6 @@ function _ticky_list {
 				prefix = red;
 				suffix = normal;
 			}
-			var title = task.title;
-			title = title.replace(/\xA0/g, " ");
-			if (width > 0 && title.length > width) {
-				title = title.substr(0, width - 3) + "...";
-			}
 			//var bullet = "□";
 			var bullet = "□";
 			//var bullet = "▢";
@@ -164,7 +159,13 @@ function _ticky_list {
 				bullet = "▤";
 				//bullet = "▣";
 			}
-			print(prefix + " " + bullet + " " + title + suffix);
+			var title = task.title;
+			title = title.replace(/\xA0/g, " ");
+			var leading = " " + bullet + " ";
+			if (width > 0 && title.length > width) {
+				title = title.substr(0, width - 3) + "...";
+			}
+			print(prefix + leading + title + suffix);
 		});
 		if (trailingBlankLine) {
 			print(normal + NBSP + NBSP + normal);
