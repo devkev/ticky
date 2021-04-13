@@ -148,16 +148,10 @@ function _ticky_list {
 			}
 			var title = task.title;
 			if (title.length > maxWidth) {
-				var leading = " □ ";
-				while (title.length > 0) {
-					print(prefix + leading + title.substr(0, maxWidth) + suffix);
-					title = title.substr( maxWidth);
-					leading = " " + NBSP + NBSP;
-				}
-			} else {
-				print(prefix + " □ " + title + suffix);
-				//print(prefix + " x " + title + suffix);
+				title = title.substr(0, maxWidth - 3) + "...";
 			}
+			print(prefix + " □ " + title + suffix);
+			//print(prefix + " x " + title + suffix);
 		});
 		if (trailingBlankLine) {
 			print(normal + NBSP + NBSP + normal);
