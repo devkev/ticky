@@ -111,6 +111,78 @@ function _ticky_sync {
 
 }
 
+function _ticky_date {
+	mongo "$mongodb_endpoint" --quiet --eval '
+		var targetdate = "'"$1"'";
+		var heading = "'"$2"'";
+		var first = true;
+
+		var ESC = String.fromCharCode(0x1B);
+		var red = ESC + "[31;1m";
+		var green = ESC + "[32m";
+		var normal = ESC + "[0m";
+		var yellow = ESC + "[33m";
+
+		var inboxId = db.tasks.findOne( { _id: "inboxId" } ).inboxId;
+
+		db.tasks.aggregate( [
+			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: true } } },
+			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
+			{ $match: { day: targetdate } },
+			{ $sort: { isAllDay: 1, dueDate: 1, priority: 1, sortOrder: 1 } },
+			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1 } },
+		] ).forEach(function (task) {
+			if (first) {
+				first = false;
+				print(heading);
+			}
+			var prefix = "";
+			suffix = "";
+			if (task.priority == 3) {
+				prefix += yellow;
+				suffix += normal;
+			} else if (task.priority == 5) {
+				prefix += red;
+				suffix += normal;
+			}
+			print(prefix + " □ " + task.title + suffix);
+		});
+		if (!first) print();
+		'
+}
+
+function _ticky_today {
+	_ticky_date "$(date "+%Y%m%d")" "TODAY"
+}
+
+function _ticky_adjacent_day {
+	_ticky_date "$(date -d "@$(( $(date "+%s") + 86400 * $1 ))" "+%Y%m%d")" "$2"
+}
+
+function _ticky_tomorrow {
+	_ticky_adjacent_day 1 "Tomorrow"
+}
+
+function _ticky_yesterday {
+	_ticky_adjacent_day -1 "Yesterday"
+}
+
+function _ticky_overdue {
+	echo "Overdue"
+	# FIXME
+}
+
+function _ticky_backlog {
+	echo "Backlog"
+	# FIXME
+}
+
+function _ticky_summary {
+	_ticky_yesterday
+	_ticky_today
+	_ticky_tomorrow
+}
+
 
 function _ticky_ {
 	_ticky_help "$@"
