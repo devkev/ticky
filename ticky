@@ -121,6 +121,8 @@ function _ticky_list {
 		var yellow = ESC + "[0033m";
 		var NBSP = String.fromCharCode(0xA0);
 
+		var maxWidth = 50;
+
 		var inboxId = db.tasks.findOne( { _id: "inboxId" } ).inboxId;
 
 		var query = '"$1"';
@@ -144,8 +146,12 @@ function _ticky_list {
 				prefix = red;
 				suffix = normal;
 			}
-			print(prefix + " □ " + task.title + suffix);
-			//print(prefix + " x " + task.title + suffix);
+			var title = task.title;
+			if (title.length > maxWidth) {
+				title = title.substr(0, maxWidth - 3) + "...";
+			}
+			print(prefix + " □ " + title + suffix);
+			//print(prefix + " x " + title + suffix);
 		});
 		if (trailingBlankLine) {
 			print(normal + NBSP + NBSP + normal);
