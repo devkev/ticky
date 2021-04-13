@@ -132,7 +132,7 @@ function _ticky_date {
 			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: true } } },
 			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
 			{ $match: { day: targetdate } },
-			{ $sort: { isAllDay: 1, dueDate: 1, priority: 1, sortOrder: 1 } },
+			{ $sort: { isAllDay: 1, dueDate: 1, priority: -1, sortOrder: 1 } },
 			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1 } },
 		] ).forEach(function (task) {
 			var prefix = normal;
