@@ -177,7 +177,7 @@ function _ticky_date {
 			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: true } } },
 			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
 			{ $match: { day: '"$1"' } },
-			{ $sort: { day: 1, isAllDay: 1, dueDate: 1, priority: -1, sortOrder: 1 } },
+			{ $sort: { day: '"${5:-1}"', isAllDay: 1, dueDate: 1, priority: -1, sortOrder: 1 } },
 			{ $project: { _id: 0, priority: 1, title: 1, dueDate: 1, kind: 1 } },
 		] )' "$2" "$3" "$4"
 }
@@ -203,50 +203,27 @@ function _ticky_yesterday {
 }
 
 function _ticky_earlier_this_week {
-	_ticky_adjacent_day -2 "Earlier this week" false "$1"
-	_ticky_adjacent_day -3 "" false "$1"
-	_ticky_adjacent_day -4 "" false "$1"
-	_ticky_adjacent_day -5 "" false "$1"
-	_ticky_adjacent_day -6 "" false "$1"
-	_ticky_adjacent_day -7 "" true "$1"
+	_ticky_date "{ \$lte: \"$(_adjacent_day -2)\", \$gte: \"$(_adjacent_day -7)\" }" "Earlier this week" true "$1" -1
 }
 
 function _ticky_last_week {
-	_ticky_adjacent_day -8 "Last week" false "$1"
-	_ticky_adjacent_day -9 "" false "$1"
-	_ticky_adjacent_day -10 "" false "$1"
-	_ticky_adjacent_day -11 "" false "$1"
-	_ticky_adjacent_day -12 "" false "$1"
-	_ticky_adjacent_day -13 "" false "$1"
-	_ticky_adjacent_day -14 "" true "$1"
+	_ticky_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -14)\" }" "Last week" true "$1" -1
+}
+
+function _ticky_last_fortnight {
+	_ticky_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -21)\" }" "Last fortnight" true "$1" -1
 }
 
 function _ticky_earlier {
-	local lines="$(_ticky_date "{ \$lt: \"$(_adjacent_day -7)\" }" "Earlier" true "$1")"
-	read header <<<"$lines"
-	read footer < <(tac <<<"$lines")
-	echo "$header"
-	sed -e '1d;$d' <<<"$lines" | tac
-	echo "$footer"
+	_ticky_date "{ \$lt: \"$(_adjacent_day -7)\" }" "Earlier" true "$1" -1
 }
 
 function _ticky_rest_of_week {
-	_ticky_adjacent_day 2 "Rest of week" false "$1"
-	_ticky_adjacent_day 3 "" false "$1"
-	_ticky_adjacent_day 4 "" false "$1"
-	_ticky_adjacent_day 5 "" false "$1"
-	_ticky_adjacent_day 6 "" false "$1"
-	_ticky_adjacent_day 7 "" true "$1"
+	_ticky_date "{ \$gte: \"$(_adjacent_day 2)\", \$lte: \"$(_adjacent_day 7)\" }" "Rest of week" true "$1" 1
 }
 
 function _ticky_next_week {
-	_ticky_adjacent_day 8 "Next week" false "$1"
-	_ticky_adjacent_day 9 "" false "$1"
-	_ticky_adjacent_day 10 "" false "$1"
-	_ticky_adjacent_day 11 "" false "$1"
-	_ticky_adjacent_day 12 "" false "$1"
-	_ticky_adjacent_day 13 "" false "$1"
-	_ticky_adjacent_day 14 "" true "$1"
+	_ticky_date "{ \$gte: \"$(_adjacent_day 8)\", \$lte: \"$(_adjacent_day 14)\" }" "Next week" true "$1" 1
 }
 
 function _ticky_later {
@@ -275,9 +252,18 @@ _NL='
 '
 pad_blank_line="$(echo -ne '\e[0000m\ua0\ua0\e[0000m')"
 
-function _ticky_all {
+function _ticky_full {
+
+#  Backlog  |  Yesterday morning  |  Today morning      |  Rest of week (remaining 5 days)
+#           |  Yesterday daytime  |  Today daytime      |
+#           |  Yesterday evening  |  Today evening      |  Later (next week onwards)
+#           |                     |                     |
+#           |  Overdue            |  Tomorrow morning   |
+#           |                     |  Tomorrow dayime    |
+#           |                     |  Tomorrow evening   |
+
 	local num_columns=4
-	local width="${1:-$(( ${COLUMNS:-200} / $num_columns - 3 ))}"
+	local width="${1:-$(( ${COLUMNS:-200} / $num_columns - 4 ))}"
 
 	col0="$(_ticky_backlog "$width")"
 	col1="$(_ticky_yesterday "$width" ; _ticky_earlier_this_week "$width" ; _ticky_earlier "$width")"
@@ -312,13 +298,47 @@ function _ticky_all {
 
 	paste <(cat <<<"$col0") <(cat <<<"$col1") <(cat <<<"$col2") <(cat <<<"$col3") | expand -t "$(( $col0_width + 3 )),$(( $col0_width + 3 + $col1_width + 3 )),$(( $col0_width + 3 + $col1_width + 3 + $col2_width + 3 ))"
 
-#  Backlog  |  Yesterday morning  |  Today morning      |  Rest of week (remaining 5 days)
-#           |  Yesterday daytime  |  Today daytime      |
-#           |  Yesterday evening  |  Today evening      |  Later (next week onwards)
-#           |                     |                     |
-#           |  Overdue            |  Tomorrow morning   |
-#           |                     |  Tomorrow dayime    |
-#           |                     |  Tomorrow evening   |
+}
+
+function _ticky_all {
+
+#  Yesterday morning  |  Today morning      |  Rest of week (remaining 5 days)
+#  Yesterday daytime  |  Today daytime      |
+#  Yesterday evening  |  Today evening      |  Later (next week onwards)
+#                     |                     |
+#  Overdue            |  Tomorrow morning   |
+#                     |  Tomorrow dayime    |
+#                     |  Tomorrow evening   |
+
+	local num_columns=3
+	local width="${1:-$(( ${COLUMNS:-200} / $num_columns - 4 ))}"
+
+	col1="$(_ticky_yesterday "$width" ; _ticky_earlier_this_week "$width" ; _ticky_last_fortnight "$width")"
+	col2="$(_ticky_today "$width" ; _ticky_tomorrow "$width")"
+	col3="$(_ticky_rest_of_week "$width" ; _ticky_later "$width")"
+
+	col1_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col1")"
+	col2_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col2")"
+	col3_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col3")"
+
+	col1_lines="$(wc -l <<<"$col1")"
+	col2_lines="$(wc -l <<<"$col2")"
+	col3_lines="$(wc -l <<<"$col3")"
+
+	max_lines="$(echo -e "$col1_lines\n$col2_lines\n$col3_lines" | awk '{if (m < $1) m = $1} END {print m}')"
+
+	local i
+	for (( i = col1_lines ; i < max_lines ; i++ )); do
+		col1="${col1}$_NL$pad_blank_line"
+	done
+	for (( i = col2_lines ; i < max_lines ; i++ )); do
+		col2="${col2}$_NL$pad_blank_line"
+	done
+	for (( i = col3_lines ; i < max_lines ; i++ )); do
+		col3="${col3}$_NL$pad_blank_line"
+	done
+
+	paste <(cat <<<"$col1") <(cat <<<"$col2") <(cat <<<"$col3") | expand -t "$(( $col1_width + 3 )),$(( $col1_width + 3 + $col2_width + 3 ))"
 
 }
 
