@@ -215,6 +215,10 @@ function _ticky_yesterday {
 	_ticky_adjacent_day -1 "Yesterday" true "$1"
 }
 
+function _ticky_day_before_yesterday {
+	_ticky_adjacent_day -2 "Day Before Yesterday" true "$1"
+}
+
 function _ticky_earlier_this_week {
 	_ticky_date "{ \$lte: \"$(_adjacent_day -2)\", \$gte: \"$(_adjacent_day -7)\" }" "Earlier this week" true "$1" -1
 }
@@ -256,6 +260,7 @@ function _ticky_backlog {
 }
 
 function _ticky_summary {
+	_ticky_day_before_yesterday "$1"
 	_ticky_yesterday "$1"
 	_ticky_today "$1"
 	_ticky_tomorrow "$1"
