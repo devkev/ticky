@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+import json
+
+lorem = {}
+
+maxlen = 0
+with open("lorem-words") as f:
+    for line in f:
+        word = line.strip()
+        if len(word) not in lorem:
+            lorem[len(word)] = []
+        lorem[len(word)].append(word)
+        if maxlen < len(word):
+            maxlen = len(word)
+lorem["max"] = maxlen
+print(json.dumps(lorem))
+
