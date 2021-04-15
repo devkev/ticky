@@ -17,8 +17,151 @@ DONE   - seems like it also just polls for no reason every 10 mins
 DONE - how to demo this - lorem ipsum substitutions?!
 
 - being able to quickly add a new entry to today's inbox
+  - POST to batch/task
+      Content-Type: application/json;charset=UTF-8
+      {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1614632825389056,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:24:44.000+0000","modifiedTime":"2021-04-15T00:24:44.000+0000","title":"this is a test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"607787cc1b5c522c9bab4130"}],"update":[],"delete":[]}
+      {
+        "add": [
+          {
+            "items": [],
+            "reminders": [],
+            "exDate": [],
+            "dueDate": null,
+            "priority": 3,
+            "isAllDay": true,
+            "progress": 0,
+            "assignee": null,
+            "sortOrder": -1614632825389056,
+            "startDate": "2021-04-14T14:00:00.000+0000",
+            "isFloating": false,
+            "status": 0,
+            "projectId": "project id goes here, eg. $inboxId",
+            "kind": null,
+            "createdTime": "2021-04-15T00:24:44.000+0000",
+            "modifiedTime": "2021-04-15T00:24:44.000+0000",
+            "title": "this is a test",
+            "tags": [],
+            "timeZone": "Australia/Sydney",
+            "content": "",
+            "id": "607787cc1b5c522c9bab4130"
+          }
+        ],
+        "update": [],
+        "delete": []
+      }
+    Response:
+      {"id2etag":{"607787cc1b5c522c9bab4130":"gf5kaz1m"},"id2error":{}}
+    then do a normal sync (almost certainly in response to websocket)
 
-- being able to easily move items between days, eg. from yesterday (or earlier) to today
+    sortOrder is negative current nanosecs since epoch
+
+      {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1615732337016832,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:31:54.000+0000","modifiedTime":"2021-04-15T00:31:54.000+0000","title":"another test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"6077897a1b5c522c9bab4131"}],"update":[],"delete":[]}
+      {
+        "add": [
+          {
+            "items": [],
+            "reminders": [],
+            "exDate": [],
+            "dueDate": null,
+            "priority": 3,
+            "isAllDay": true,
+            "progress": 0,
+            "assignee": null,
+            "sortOrder": -1615732337016832,
+            "startDate": "2021-04-14T14:00:00.000+0000",
+            "isFloating": false,
+            "status": 0,
+            "projectId": "project id goes here, eg. $inboxId",
+            "kind": null,
+            "createdTime": "2021-04-15T00:31:54.000+0000",
+            "modifiedTime": "2021-04-15T00:31:54.000+0000",
+            "title": "another test",
+            "tags": [],
+            "timeZone": "Australia/Sydney",
+            "content": "",
+            "id": "6077897a1b5c522c9bab4131"
+          }
+        ],
+        "update": [],
+        "delete": []
+      }
+
 
 - being able to quickly mark tasks as done
+  - POST batch/task
+      {"add":[],"update":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1614632825389056,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":2,"projectId":"project id goes here, eg. $inboxId","kind":null,"etag":"gf5kaz1m","createdTime":"2021-04-15T00:24:44.000+0000","modifiedTime":"2021-04-15T00:24:44.000+0000","isCalendarNew":false,"title":"this is a test","completedTime":"2021-04-15T00:34:13.000+0000","tags":[],"timeZone":"Australia/Sydney","content":"","id":"607787cc1b5c522c9bab4130"}],"delete":[]}
+      {
+        "add": [],
+        "update": [
+          {
+            "items": [],
+            "reminders": [],
+            "exDate": [],
+            "dueDate": null,
+            "priority": 3,
+            "isAllDay": true,
+            "progress": 0,
+            "assignee": null,
+            "sortOrder": -1614632825389056,
+            "startDate": "2021-04-14T14:00:00.000+0000",
+            "isFloating": false,
+            "status": 2,
+            "projectId": "project id goes here, eg. $inboxId",
+            "kind": null,
+            "etag": "gf5kaz1m",
+            "createdTime": "2021-04-15T00:24:44.000+0000",
+            "modifiedTime": "2021-04-15T00:24:44.000+0000",
+            "isCalendarNew": false,
+            "title": "this is a test",
+            "completedTime": "2021-04-15T00:34:13.000+0000",
+            "tags": [],
+            "timeZone": "Australia/Sydney",
+            "content": "",
+            "id": "607787cc1b5c522c9bab4130"
+          }
+        ],
+        "delete": []
+      }
+    Response:
+      {"id2etag":{"607787cc1b5c522c9bab4130":"u6ju13o1"},"id2error":{}}
+
+- being able to easily move items between days, eg. from yesterday (or earlier) to today
+{"add":[],"update":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"repeatFirstDate":"2021-04-15T14:00:00.000+0000","priority":3,"isAllDay":true,"repeatFlag":null,"progress":0,"assignee":null,"sortOrder":-1615732337016832,"startDate":"2021-04-15T14:00:00.000+0000","isFloating":false,"reminder":null,"remindTime":null,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"etag":"bnlr3zk6","createdTime":"2021-04-15T00:31:54.000+0000","modifiedTime":"2021-04-15T00:53:00.000+0000","isCalendarNew":false,"title":"another test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"6077897a1b5c522c9bab4131"}],"delete":[]}
+{
+  "add": [],
+  "update": [
+    {
+      "items": [],
+      "reminders": [],
+      "exDate": [],
+      "dueDate": null,
+      "repeatFirstDate": "2021-04-15T14:00:00.000+0000",
+      "priority": 3,
+      "isAllDay": true,
+      "repeatFlag": null,
+      "progress": 0,
+      "assignee": null,
+      "sortOrder": -1615732337016832,
+      "startDate": "2021-04-15T14:00:00.000+0000",
+      "isFloating": false,
+      "reminder": null,
+      "remindTime": null,
+      "status": 0,
+      "projectId": "project id goes here, eg. $inboxId",
+      "kind": null,
+      "etag": "bnlr3zk6",
+      "createdTime": "2021-04-15T00:31:54.000+0000",
+      "modifiedTime": "2021-04-15T00:53:00.000+0000",
+      "isCalendarNew": false,
+      "title": "another test",
+      "tags": [],
+      "timeZone": "Australia/Sydney",
+      "content": "",
+      "id": "6077897a1b5c522c9bab4131"
+    }
+  ],
+  "delete": []
+}
+
+
 
