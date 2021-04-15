@@ -2,7 +2,7 @@
 
 import urwid
 import pymongo
-from datetime import datetime
+from datetime import datetime, timedelta
 
 mongo = pymongo.MongoClient('mongodb://localhost:27017/ticky')
 db = mongo.get_default_database()
@@ -59,8 +59,8 @@ def show_list(heading, tasks, trailing_blank_line=False, width=0):
         print()
 
 
-def todays_day():
-    return datetime.today().strftime('%Y%m%d')
+def day(day_delta=0):
+    return (datetime.today() + timedelta(days=day_delta)).strftime('%Y%m%d')
 
 def query_day(day, sort=1):
     return map(Task, db.tasks.aggregate( [
@@ -103,9 +103,11 @@ def exit_program(button):
 
 
 body = []
-body += build_menu(u'TODAY', query_day(todays_day()))
+body += build_menu(u'YESTERDAY', query_day(day(-1)))
 body.append(urwid.Divider())
-body += build_menu(u'TOMORROW', query_day(todays_day()))
+body += build_menu(u'TODAY', query_day(day()))
+body.append(urwid.Divider())
+body += build_menu(u'TOMORROW', query_day(day(1)))
 main = urwid.Padding(urwid.ListBox(urwid.SimpleFocusListWalker(body)), left=0, right=0)
 
 #top = urwid.Overlay(main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
