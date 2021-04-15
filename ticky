@@ -135,7 +135,13 @@ function _new_task {
 
 function _ticky_add {
 	local newtask="$(_new_task "$1")"
+	shift
+	for i; do
+		newtask="$newtask,$(_new_task "$i")"
+	done
+
 	local request='{"add":['"$newtask"'],"update":[],"delete":[]}'
+
 	_api_call_post 'batch/task' <<<"$request" > "$task_file"
 	cat "$task_file"; echo
 }
