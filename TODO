@@ -16,75 +16,75 @@ DONE   - seems like it also just polls for no reason every 10 mins
 
 DONE - how to demo this - lorem ipsum substitutions?!
 
-- being able to quickly add a new entry to today's inbox
-  - POST to batch/task
-      Content-Type: application/json;charset=UTF-8
-      {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1614632825389056,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:24:44.000+0000","modifiedTime":"2021-04-15T00:24:44.000+0000","title":"this is a test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"607787cc1b5c522c9bab4130"}],"update":[],"delete":[]}
-      {
-        "add": [
-          {
-            "items": [],
-            "reminders": [],
-            "exDate": [],
-            "dueDate": null,
-            "priority": 3,
-            "isAllDay": true,
-            "progress": 0,
-            "assignee": null,
-            "sortOrder": -1614632825389056,
-            "startDate": "2021-04-14T14:00:00.000+0000",
-            "isFloating": false,
-            "status": 0,
-            "projectId": "project id goes here, eg. $inboxId",
-            "kind": null,
-            "createdTime": "2021-04-15T00:24:44.000+0000",
-            "modifiedTime": "2021-04-15T00:24:44.000+0000",
-            "title": "this is a test",
-            "tags": [],
-            "timeZone": "Australia/Sydney",
-            "content": "",
-            "id": "607787cc1b5c522c9bab4130"
-          }
-        ],
-        "update": [],
-        "delete": []
-      }
-    Response:
-      {"id2etag":{"607787cc1b5c522c9bab4130":"gf5kaz1m"},"id2error":{}}
-    then do a normal sync (almost certainly in response to websocket)
-
-    sortOrder is negative current microsecs since epoch
-
-      {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1615732337016832,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:31:54.000+0000","modifiedTime":"2021-04-15T00:31:54.000+0000","title":"another test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"6077897a1b5c522c9bab4131"}],"update":[],"delete":[]}
-      {
-        "add": [
-          {
-            "items": [],
-            "reminders": [],
-            "exDate": [],
-            "dueDate": null,
-            "priority": 3,
-            "isAllDay": true,
-            "progress": 0,
-            "assignee": null,
-            "sortOrder": -1615732337016832,
-            "startDate": "2021-04-14T14:00:00.000+0000",
-            "isFloating": false,
-            "status": 0,
-            "projectId": "project id goes here, eg. $inboxId",
-            "kind": null,
-            "createdTime": "2021-04-15T00:31:54.000+0000",
-            "modifiedTime": "2021-04-15T00:31:54.000+0000",
-            "title": "another test",
-            "tags": [],
-            "timeZone": "Australia/Sydney",
-            "content": "",
-            "id": "6077897a1b5c522c9bab4131"
-          }
-        ],
-        "update": [],
-        "delete": []
-      }
+DONE - being able to quickly add a new entry to today's inbox
+DONE   - POST to batch/task
+DONE       Content-Type: application/json;charset=UTF-8
+DONE       {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1614632825389056,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:24:44.000+0000","modifiedTime":"2021-04-15T00:24:44.000+0000","title":"this is a test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"607787cc1b5c522c9bab4130"}],"update":[],"delete":[]}
+DONE       {
+DONE         "add": [
+DONE           {
+DONE             "items": [],
+DONE             "reminders": [],
+DONE             "exDate": [],
+DONE             "dueDate": null,
+DONE             "priority": 3,
+DONE             "isAllDay": true,
+DONE             "progress": 0,
+DONE             "assignee": null,
+DONE             "sortOrder": -1614632825389056,
+DONE             "startDate": "2021-04-14T14:00:00.000+0000",
+DONE             "isFloating": false,
+DONE             "status": 0,
+DONE             "projectId": "project id goes here, eg. $inboxId",
+DONE             "kind": null,
+DONE             "createdTime": "2021-04-15T00:24:44.000+0000",
+DONE             "modifiedTime": "2021-04-15T00:24:44.000+0000",
+DONE             "title": "this is a test",
+DONE             "tags": [],
+DONE             "timeZone": "Australia/Sydney",
+DONE             "content": "",
+DONE             "id": "607787cc1b5c522c9bab4130"
+DONE           }
+DONE         ],
+DONE         "update": [],
+DONE         "delete": []
+DONE       }
+DONE     Response:
+DONE       {"id2etag":{"607787cc1b5c522c9bab4130":"gf5kaz1m"},"id2error":{}}
+DONE     then do a normal sync (almost certainly in response to websocket)
+DONE 
+DONE     sortOrder is negative current microsecs since epoch
+DONE 
+DONE       {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1615732337016832,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:31:54.000+0000","modifiedTime":"2021-04-15T00:31:54.000+0000","title":"another test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"6077897a1b5c522c9bab4131"}],"update":[],"delete":[]}
+DONE       {
+DONE         "add": [
+DONE           {
+DONE             "items": [],
+DONE             "reminders": [],
+DONE             "exDate": [],
+DONE             "dueDate": null,
+DONE             "priority": 3,
+DONE             "isAllDay": true,
+DONE             "progress": 0,
+DONE             "assignee": null,
+DONE             "sortOrder": -1615732337016832,
+DONE             "startDate": "2021-04-14T14:00:00.000+0000",
+DONE             "isFloating": false,
+DONE             "status": 0,
+DONE             "projectId": "project id goes here, eg. $inboxId",
+DONE             "kind": null,
+DONE             "createdTime": "2021-04-15T00:31:54.000+0000",
+DONE             "modifiedTime": "2021-04-15T00:31:54.000+0000",
+DONE             "title": "another test",
+DONE             "tags": [],
+DONE             "timeZone": "Australia/Sydney",
+DONE             "content": "",
+DONE             "id": "6077897a1b5c522c9bab4131"
+DONE           }
+DONE         ],
+DONE         "update": [],
+DONE         "delete": []
+DONE       }
 
 
 - being able to quickly mark tasks as done
