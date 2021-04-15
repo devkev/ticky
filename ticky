@@ -322,7 +322,7 @@ function _ticky_monitor {
 	done
 }
 
-function _ticky_list {
+function _show_list {
 	mongo --quiet "$mongodb_endpoint" --eval '
 
 		var lorem = {"1": ["a"], "2": ["ac", "ad", "at", "et", "eu", "id", "in", "mi", "ut"], "3": ["cum", "dui", "est", "leo", "mus", "nam", "nec", "non", "per", "sed", "sem", "sit", "vel"], "4": ["amet", "ante", "arcu", "cras", "diam", "eget", "elit", "erat", "eros", "nibh", "nisi", "nisl", "nunc", "odio", "orci", "pede", "quam", "quis", "urna", "xdis"], "5": ["augue", "class", "dolor", "donec", "etiam", "felis", "fusce", "ipsum", "justo", "lacus", "lorem", "magna", "massa", "metus", "morbi", "neque", "nulla", "proin", "purus", "risus", "velit", "vitae"], "6": ["aenean", "aptent", "auctor", "congue", "cursus", "lectus", "libero", "ligula", "litora", "luctus", "magnis", "mattis", "mauris", "mollis", "montes", "nostra", "nullam", "ornare", "sapien", "semper", "sociis", "taciti", "tellus", "tortor", "turpis", "varius"], "7": ["aliquam", "aliquet", "blandit", "commodo", "conubia", "dapibus", "egestas", "euismod", "feugiat", "gravida", "iaculis", "integer", "lacinia", "laoreet", "natoque", "posuere", "potenti", "pretium", "quisque", "sodales", "vivamus", "viverra"], "8": ["accumsan", "faucibus", "inceptos", "interdum", "nascetur", "pharetra", "placerat", "praesent", "pulvinar", "sagittis", "sociosqu", "suscipit", "torquent", "ultrices", "vehicula", "volutpat"], "9": ["consequat", "convallis", "curabitur", "dignissim", "elementum", "facilisis", "fermentum", "hendrerit", "himenaeos", "imperdiet", "malesuada", "penatibus", "phasellus", "porttitor", "ridiculus", "tincidunt", "tristique", "ultricies", "vulputate"], "10": ["adipiscing", "parturient", "vestibulum"], "11": ["condimentum", "scelerisque", "suspendisse", "ullamcorper"], "12": ["consectetuer", "pellentesque", "sollicitudin"], "max": 12};
@@ -454,8 +454,8 @@ function _ticky_list {
 		'
 }
 
-function _ticky_date {
-	_ticky_list 'db.tasks.aggregate( [
+function _show_date {
+	_show_list 'db.tasks.aggregate( [
 			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: true } } },
 			{ $addFields: { day: { $dateToString: { date: "$dueDate", format: "%Y%m%d", timezone: "$timeZone" } } } },
 			{ $match: { day: '"$1"' } },
@@ -465,7 +465,7 @@ function _ticky_date {
 }
 
 function _ticky_today {
-	_ticky_date "\"$(date "+%Y%m%d")\"" "TODAY" true "$1"
+	_show_date "\"$(date "+%Y%m%d")\"" "TODAY" true "$1"
 }
 
 function _adjacent_day {
@@ -473,7 +473,7 @@ function _adjacent_day {
 }
 
 function _ticky_adjacent_day {
-	_ticky_date "\"$(_adjacent_day "$1")\"" "$2" "$3" "$4"
+	_show_date "\"$(_adjacent_day "$1")\"" "$2" "$3" "$4"
 }
 
 function _ticky_tomorrow {
@@ -489,39 +489,39 @@ function _ticky_day_before_yesterday {
 }
 
 function _ticky_earlier_this_week {
-	_ticky_date "{ \$lte: \"$(_adjacent_day -2)\", \$gte: \"$(_adjacent_day -7)\" }" "Earlier this week" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day -2)\", \$gte: \"$(_adjacent_day -7)\" }" "Earlier this week" true "$1" -1
 }
 
 function _ticky_last_week {
-	_ticky_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -14)\" }" "Last week" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -14)\" }" "Last week" true "$1" -1
 }
 
 function _ticky_last_fortnight {
-	_ticky_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -21)\" }" "Last fortnight" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -21)\" }" "Last fortnight" true "$1" -1
 }
 
 function _ticky_earlier {
-	_ticky_date "{ \$lt: \"$(_adjacent_day -7)\" }" "Earlier" true "$1" -1
+	_show_date "{ \$lt: \"$(_adjacent_day -7)\" }" "Earlier" true "$1" -1
 }
 
 function _ticky_rest_of_week {
-	_ticky_date "{ \$gte: \"$(_adjacent_day 2)\", \$lte: \"$(_adjacent_day 7)\" }" "Rest of week" true "$1" 1
+	_show_date "{ \$gte: \"$(_adjacent_day 2)\", \$lte: \"$(_adjacent_day 7)\" }" "Rest of week" true "$1" 1
 }
 
 function _ticky_next_week {
-	_ticky_date "{ \$gte: \"$(_adjacent_day 8)\", \$lte: \"$(_adjacent_day 14)\" }" "Next week" true "$1" 1
+	_show_date "{ \$gte: \"$(_adjacent_day 8)\", \$lte: \"$(_adjacent_day 14)\" }" "Next week" true "$1" 1
 }
 
 function _ticky_later {
-	_ticky_date "{ \$gt: \"$(_adjacent_day 7)\" }" "Later" true "$1"
+	_show_date "{ \$gt: \"$(_adjacent_day 7)\" }" "Later" true "$1"
 }
 
 function _ticky_overdue {
-	_ticky_date "{ \$lt: \"$(date "+%Y%m%d")\" }" "Overdue" true "$1"
+	_show_date "{ \$lt: \"$(date "+%Y%m%d")\" }" "Overdue" true "$1"
 }
 
 function _ticky_backlog {
-	_ticky_list 'db.tasks.aggregate( [
+	_show_list 'db.tasks.aggregate( [
 			{ $match: { projectId: inboxId, status: 0, deleted: 0, dueDate: { $exists: false } } },
 			{ $sort: { priority: -1, sortOrder: 1 } },
 			{ $project: { _id: 0, priority: 1, title: 1, kind: 1 } },
