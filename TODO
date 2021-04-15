@@ -1,5 +1,18 @@
 
 - how often does the website call batch/ to refresh?  how does it find out about updates?
+  - as expected, it receives a message on the websocket to tell it to sync, and then it syncs
+  - websocket is wss://wss.ticktick.com/web
+    - not sure about credentials - seems to use standard websocket key mechanism, but not sure where the key comes from
+      - there is no creds to open the wss
+      - on connection, the server sends a message with a uuid
+      - the website then takes this uuid and sends it as:
+            { pushToken: "06ade7fffe92700b-00004752-03bcac35-53d934d97d27e034-571aa7ff", osType: 41}
+        to POST https://api.ticktick.com/api/v2/push/register
+        and gets response
+            {"id":"31a33452b3414eab8dec761234ee8e5a","pushToken":"06ade7fffe92700b-00004752-03bcac35-53d934d97d27e034-571aa7ff","osType":41,"version":3880}
+        where the id changes each time
+    - there are hello message sent to the wss server periodically, probably to prevent connection timeout
+  - seems like it also just polls for no reason every 10 mins
 
 DONE - how to demo this - lorem ipsum substitutions?!
 

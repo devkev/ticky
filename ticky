@@ -10,10 +10,16 @@ login_file="${login_file:-$ticky_dir/.login}"
 cookie_file="${cookie_file:-$ticky_dir/.cookie}"
 backup_dir="${backup_dir:-$ticky_dir/backups}"
 batch_file="${batch_file:-$ticky_dir/.batch}"
+register_file="${register_file:-$ticky_dir/.register}"
+deviceid_file="${deviceid_file:-$ticky_dir/.deviceid}"
 
+ticktick_web_app_version_claim="3880"
 api_hostname="api.ticktick.com"
 api_base="https://$api_hostname/api/v2/"
+wss_url="wss://wss.ticktick.com/web"
 cookie_expiry="2147483647"  # shoot me in 2038
+
+websocket_reconnect_secs="5"
 
 mongodb_endpoint="mongodb://localhost:27017/ticky"
 
@@ -55,6 +61,49 @@ function _ticky_backup {
 	if _ticky_export > "$backup_dir/$file"; then
 		xz "$backup_dir/$file"
 	fi
+}
+
+function _generate_objectid {
+	mongo --nodb --norc --quiet --eval 'print(ObjectId().str)'
+}
+
+function _get_deviceid {
+	if [ ! -e "$deviceid_file" ]; then
+		_generate_objectid > "$deviceid_file"
+	fi
+	deviceid="$(<"$deviceid_file")"
+}
+
+function _get_sessionid {
+	sessionid="$(_generate_objectid)"
+}
+
+function _get_xdevice {
+	_get_deviceid
+	_get_sessionid
+	xdevice='{"platform":"web","os":"Linux x86_64","device":"Chrome 88.0.4324.182","name":"","version":'"$ticktick_web_app_version_claim"',"id":"'"$deviceid"'","channel":"website","campaign":"","websocket":"'"$sessionid"'"}'
+}
+
+function _api_call_base {
+	_get_xdevice
+	# FIXME: add innocuous Origin, Referer, User-Agent
+	#echo curl --silent --show-error --cookie "$cookie_file" -H "X-Device: $xdevice" "$@" 1>&2
+	curl --silent --show-error --cookie "$cookie_file" \
+		-H "X-Device: $xdevice" \
+		-H 'Accept: application/json, text/plain, */*' \
+		-H 'Accept-Language: en-GB,en-US;q=0.9,en;q=0.8' \
+		-H 'Origin: https://ticktick.com' \
+		-H 'Referer: https://ticktick.com/' \
+		-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36' \
+		"$@"
+}
+
+function _api_call_get {
+	_api_call_base "$api_base"'push/register' "$api_base$@"
+}
+
+function _api_call_post {
+	_api_call_base -d '@-' -H 'Content-Type: application/json' -X POST "$api_base$@"
 }
 
 function _ticky_sync {
@@ -109,6 +158,106 @@ function _ticky_sync {
 
 	# FIXME: handle `tags`
 
+}
+
+function _ticky_wait_for_push {
+	echo 'connecting'
+	(
+		sleep 2
+		while :; do
+			echo hello
+			sleep 9m
+		done
+	) \
+	| websocat -t - "$wss_url" \
+	| (
+		while :; do
+			echo 'listening'
+			if read -r -t 600 line; then
+				#echo line: $line
+				case "$line" in
+					'{'*'}')
+						# json
+						type="$(jq -r .type <<<"$line")"
+						case "$type" in
+							needSync)
+								echo 'syncing (from push notification)'
+								_ticky_sync
+								;;
+							habit)
+								# ignore
+								;;
+							paymentUpdate)
+								# ignore
+								;;
+							sn|team)
+								# ignore
+								;;
+							remind)
+								# ignore
+								;;
+							notification)
+								# ignore
+								;;
+						esac
+						;;
+					*)
+						# anything non-json is assumed to be the registration key
+						local request='{ "pushToken": "'"$line"'", "osType": 41}'
+						echo "registering $request"
+						_api_call_post 'push/register' <<<"$request" > "$register_file"
+						cat "$register_file"; echo
+						;;
+				esac
+			else
+				rc="$?"
+				echo "read failed ($rc)"
+				case "$rc" in
+					142)
+						#echo 'no line (timeout)'
+						echo 'syncing (from timeout)'
+						_ticky_sync
+						;;
+					130)
+						echo 'read got sigint, user has interrupted with ^c'
+						kill -USR1 $$
+						exit
+						;;
+					1)
+						echo 'eof, websocat has exited (connection lost)'
+						kill -USR1 $$
+						exit
+						;;
+				esac
+			fi
+		done
+	)
+}
+
+function _ticky_monitor {
+	echo 'syncing (initially)'
+	_ticky_sync
+	while :; do
+		ticky wait_for_push
+		rc="$?"
+		case "$rc" in
+			0|138)
+				# normal exit (should be impossible), or sigusr1 => go around
+				echo 'normal exit (connection lost), reconnecting'
+				;;
+			143|130)
+				# sigterm or sigint => exit
+				echo 'interrupted, exiting'
+				break
+				;;
+			*)
+				echo 'unknown error, exiting'
+				break
+				;;
+		esac
+		echo "connection lost ($rc), reconnecting in $websocket_reconnect_secs secs..."
+		sleep "$websocket_reconnect_secs"
+	done
 }
 
 function _ticky_list {
