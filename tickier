@@ -33,6 +33,8 @@ class Task(Model):
         if self.kind == "CHECKLIST":
             bullet = "▤"
             #bullet = "▣"
+        if self.selected:
+            bullet = "*"
         return f' {bullet} {self.title}'
 
     def create_widget(self):
@@ -92,11 +94,20 @@ def build_menu(title, choices):
     return this_menu
 
 def item_chosen(button, choice):
-    response = urwid.Text([u'You chose ', repr(choice), u'\n'])
-    done = urwid.Button(u'Ok')
-    urwid.connect_signal(done, 'click', exit_program)
-    main.original_widget = urwid.Filler(urwid.Pile([response,
-        urwid.AttrMap(done, None, focus_map='reversed')]))
+    #button.selected = True
+    choice.selected = not choice.selected
+
+    #button.set_label("*** " + str(choice) + " ***")
+    # FIXME: this isn't great - how to completely replace the widget?
+    button.set_label(str(choice))
+    #button = choice.create_widget()
+    #button.original_widget = choice.create_widget()
+
+    #response = urwid.Text([u'You chose ', repr(choice), u'\n'])
+    #done = urwid.Button(u'Ok')
+    #urwid.connect_signal(done, 'click', exit_program)
+    #main.original_widget = urwid.Filler(urwid.Pile([response,
+    #    urwid.AttrMap(done, None, focus_map='reversed')]))
 
 def exit_program(button):
     raise urwid.ExitMainLoop()
