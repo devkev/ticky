@@ -147,6 +147,27 @@ function _ticky_sync {
 			end
 		' \
 		| mongoimport --quiet --mode=upsert --uri "$mongodb_endpoint" -c tasks
+	local rc=$?
+	if [ $rc -ne 0 ]; then
+		echo "Error importing tasks: $rc"
+	fi
+
+	_api_call_get 'user/preferences/settings?includeWeb=true' \
+		| tee "$batch_file".settings \
+		| jq '.["_id"] = .id | del(.id)' \
+		| mongoimport --quiet --mode=upsert --uri "$mongodb_endpoint" -c settings
+	local rc=$?
+	if [ $rc -ne 0 ]; then
+		echo "Error importing settings: $rc"
+	fi
+
+	_api_call_get 'user/profile' \
+		| tee "$batch_file".profile \
+		| mongoimport --quiet --mode=upsert --uri "$mongodb_endpoint" -c profile
+	local rc=$?
+	if [ $rc -ne 0 ]; then
+		echo "Error importing profile: $rc"
+	fi
 
 	# FIXME: do the upsert of all the stuff, and the update of checkPoint, in a transaction?
 
@@ -182,6 +203,7 @@ function _ticky_wait_for_push {
 						case "$type" in
 							needSync)
 								echo 'syncing (from push notification)'
+								# FIXME: change to "ticky sync" to pick up any newer version of sync
 								_ticky_sync
 								;;
 							habit)
@@ -216,6 +238,7 @@ function _ticky_wait_for_push {
 					142)
 						#echo 'no line (timeout)'
 						echo 'syncing (from timeout)'
+						# FIXME: change to "ticky sync" to pick up any newer version of sync
 						_ticky_sync
 						;;
 					130)
