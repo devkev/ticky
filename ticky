@@ -99,7 +99,7 @@ function _api_call_base {
 }
 
 function _api_call_get {
-	_api_call_base "$api_base"'push/register' "$api_base$@"
+	_api_call_base "$api_base$@"
 }
 
 function _api_call_post {
@@ -116,7 +116,7 @@ function _ticky_sync {
 		# FIXME: get completed tasks
 	fi
 
-	curl --silent --show-error --cookie "$cookie_file" "$api_base"'batch/check/'"$checkPoint" \
+	_api_call_get 'batch/check/'"$checkPoint" \
 		| tee "$batch_file" \
 		| jq '
 			def xjson($type; $field):
