@@ -203,8 +203,7 @@ function _ticky_wait_for_push {
 						case "$type" in
 							needSync)
 								echo 'syncing (from push notification)'
-								# FIXME: change to "ticky sync" to pick up any newer version of sync
-								_ticky_sync
+								ticky sync
 								;;
 							habit)
 								# ignore
@@ -238,8 +237,7 @@ function _ticky_wait_for_push {
 					142)
 						#echo 'no line (timeout)'
 						echo 'syncing (from timeout)'
-						# FIXME: change to "ticky sync" to pick up any newer version of sync
-						_ticky_sync
+						ticky sync
 						;;
 					130)
 						echo 'read got sigint, user has interrupted with ^c'
