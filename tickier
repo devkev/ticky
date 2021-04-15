@@ -30,6 +30,16 @@ class Task(Model):
             #bullet = "▣"
         return f' {bullet} {self.title}'
 
+    def create_widget(self):
+        priority = None
+        if self.priority == 3:
+            priority = 'priority_medium'
+        elif self.priority == 5:
+            priority = 'priority_high'
+        button = urwid.Button(str(self))
+        urwid.connect_signal(button, 'click', item_chosen, self)
+        return urwid.AttrMap(button, priority, focus_map='reversed_'+priority)
+
 
 
 def show_list(heading, tasks, trailing_blank_line=False, width=0):
@@ -61,12 +71,19 @@ def query_day(day, sort=1):
 #show_list("TODAY", query_day(todays_day()), trailing_blank_line=True)
 
 
+palette = [
+        ('reversed', 'standout', ''),
+        ('heading', 'bold, white', 'black'),
+        ('priority_medium', 'bold, brown', 'black'),
+        ('priority_high', 'bold, dark red', 'black'),
+        ('reversed_priority_medium', 'bold, white', 'dark gray'),
+        ('reversed_priority_high', 'bold, white', 'dark red'),
+    ]
+
 def build_menu(title, choices):
-    this_menu = [urwid.Text(title)]
+    this_menu = [urwid.Text(('heading',title))]
     for c in choices:
-        button = urwid.Button(str(c))
-        urwid.connect_signal(button, 'click', item_chosen, c)
-        this_menu.append(urwid.AttrMap(button, None, focus_map='reversed'))
+        this_menu.append(c.create_widget())
     return this_menu
 
 def item_chosen(button, choice):
@@ -91,7 +108,7 @@ main = urwid.Padding(urwid.ListBox(urwid.SimpleFocusListWalker(body)), left=0, r
 #    valign='middle', height=('relative', 100),
 #    min_width=10, min_height=9)
 #urwid.MainLoop(top, palette=[('reversed', 'standout', '')]).run()
-urwid.MainLoop(main, palette=[('reversed', 'standout', '')]).run()
+urwid.MainLoop(main, palette).run()
 
 
 
