@@ -10,9 +10,9 @@ db = mongo.get_default_database()
 inboxId = db.tasks.find_one( { '_id': 'inboxId' } )['inboxId']
 #print(inboxId)
 
-def show_list(heading, query, trailing_blank_line=False, width=0):
+def show_list(heading, tasks, trailing_blank_line=False, width=0):
     first = True
-    for task in query:
+    for task in tasks:
         if first:
             first = False
             if heading:
@@ -30,21 +30,22 @@ def show_list(heading, query, trailing_blank_line=False, width=0):
     if trailing_blank_line:
         print()
 
-def show_date(heading, date, trailing_blank_line=False, width=0, sort=1):
-    query = db.tasks.aggregate( [
+
+def todays_day():
+    return datetime.today().strftime('%Y%m%d')
+
+def query_day(day, sort=1):
+    return db.tasks.aggregate( [
             { '$match': { 'projectId': inboxId, 'status': 0, 'deleted': 0, 'dueDate': { '$exists': True } } },
             { '$addFields': { 'day': { '$dateToString': { 'date': '$dueDate', 'format': '%Y%m%d', 'timezone': '$timeZone' } } } },
-            { '$match': { 'day': date } },
+            { '$match': { 'day': day } },
             { '$sort': { 'day': sort, 'isAllDay': 1, 'dueDate': 1, 'priority': -1, 'sortOrder': 1 } },
             { '$project': { '_id': 0, 'priority': 1, 'title': 1, 'dueDate': 1, 'kind': 1 } },
         ] )
-    show_list(heading, query, trailing_blank_line, width)
 
-def today(width=0):
-    show_date("TODAY", datetime.today().strftime('%Y%m%d'), trailing_blank_line=True, width=width)
-    
 
-today()
+
+show_list("TODAY", query_day(todays_day()), trailing_blank_line=True)
 
 
 
