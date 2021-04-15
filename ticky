@@ -86,8 +86,6 @@ function _get_xdevice {
 
 function _api_call_base {
 	_get_xdevice
-	# FIXME: add innocuous Origin, Referer, User-Agent
-	#echo curl --silent --show-error --cookie "$cookie_file" -H "X-Device: $xdevice" "$@" 1>&2
 	curl --silent --show-error --cookie "$cookie_file" \
 		-H "X-Device: $xdevice" \
 		-H 'Accept: application/json, text/plain, */*' \
