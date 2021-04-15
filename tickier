@@ -61,14 +61,13 @@ def query_day(day, sort=1):
 #show_list("TODAY", query_day(todays_day()), trailing_blank_line=True)
 
 
-def menu(title, choices):
-    #body = [urwid.Text(title), urwid.Divider()]
-    body = [urwid.Text(title)]
+def build_menu(title, choices):
+    this_menu = [urwid.Text(title)]
     for c in choices:
         button = urwid.Button(str(c))
         urwid.connect_signal(button, 'click', item_chosen, c)
-        body.append(urwid.AttrMap(button, None, focus_map='reversed'))
-    return urwid.ListBox(urwid.SimpleFocusListWalker(body))
+        this_menu.append(urwid.AttrMap(button, None, focus_map='reversed'))
+    return this_menu
 
 def item_chosen(button, choice):
     response = urwid.Text([u'You chose ', repr(choice), u'\n'])
@@ -80,12 +79,19 @@ def item_chosen(button, choice):
 def exit_program(button):
     raise urwid.ExitMainLoop()
 
-main = urwid.Padding(menu(u'TODAY', query_day(todays_day())), left=2, right=2)
-top = urwid.Overlay(main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
-    align='center', width=('relative', 60),
-    valign='middle', height=('relative', 60),
-    min_width=20, min_height=9)
-urwid.MainLoop(top, palette=[('reversed', 'standout', '')]).run()
+
+body = []
+body += build_menu(u'TODAY', query_day(todays_day()))
+body.append(urwid.Divider())
+body += build_menu(u'TOMORROW', query_day(todays_day()))
+main = urwid.Padding(urwid.ListBox(urwid.SimpleFocusListWalker(body)), left=0, right=0)
+
+#top = urwid.Overlay(main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
+#    align='center', width=('relative', 100),
+#    valign='middle', height=('relative', 100),
+#    min_width=10, min_height=9)
+#urwid.MainLoop(top, palette=[('reversed', 'standout', '')]).run()
+urwid.MainLoop(main, palette=[('reversed', 'standout', '')]).run()
 
 
 
