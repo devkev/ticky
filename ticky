@@ -12,6 +12,7 @@ backup_dir="${backup_dir:-$ticky_dir/backups}"
 batch_file="${batch_file:-$ticky_dir/.batch}"
 register_file="${register_file:-$ticky_dir/.register}"
 deviceid_file="${deviceid_file:-$ticky_dir/.deviceid}"
+task_file="${task_file:-$ticky_dir/.task}"
 
 ticktick_web_app_version_claim="3880"
 api_hostname="api.ticktick.com"
@@ -104,9 +105,45 @@ function _api_call_post {
 	_api_call_base -d '@-' -H 'Content-Type: application/json' -X POST "$api_base$@"
 }
 
+
+function _new_task {
+	# ensure proper json quoting
+	# unlike all the others, this one includes the surrounding " chars
+	local title="$(jq -R -a . <<<"$1")"
+
+	local defaultPriority="$(mongo --quiet "$mongodb_endpoint" --eval 'print(db.settings.findOne().defaultPriority)')"
+	local priority="$defaultPriority"
+
+	local sortOrder="$(date '+%s%N')"
+	sortOrder="-${sortOrder%???}"
+
+	local timeZone="$(mongo --quiet "$mongodb_endpoint" --eval 'print(db.settings.findOne().timeZone)')"
+
+	local today="$(date "+%Y%m%d")"
+	local startDate="$(TZ=UTC date -d 'TZ="'"$timeZone"'" '"$today"'' '+%Y-%m-%dT%H:%M:%S.000%z')"
+
+	local inboxId="$(mongo --quiet "$mongodb_endpoint" --eval 'print(db.tasks.findOne( { _id: "inboxId" } ).inboxId)')"
+
+	local createdTime="$(TZ=UTC date '+%Y-%m-%dT%H:%M:%S.000%z')"
+	local modifiedTime="$createdTime"
+
+	local id="$(_generate_objectid)"
+
+	echo '{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":'"$priority"',"isAllDay":true,"progress":0,"assignee":null,"sortOrder":'"$sortOrder"',"startDate":"'"$startDate"'","isFloating":false,"status":0,"projectId":"'"$inboxId"'","kind":null,"createdTime":"'"$createdTime"'","modifiedTime":"'"$modifiedTime"'","title":'"$title"',"tags":[],"timeZone":"'"$timeZone"'","content":"","id":"'"$id"'"}'
+}
+
+
+function _ticky_add {
+	local newtask="$(_new_task "$1")"
+	local request='{"add":['"$newtask"'],"update":[],"delete":[]}'
+	_api_call_post 'batch/task' <<<"$request" > "$task_file"
+	cat "$task_file"; echo
+}
+
+
 function _ticky_sync {
 
-	checkPoint="$(mongo "$mongodb_endpoint" --quiet --eval 'var c = db.tasks.find({_id:"checkPoint"}); c.hasNext() ? ((cp = c.next()).checkPoint ? cp.checkPoint : NumberLong("0")) : NumberLong("0")' | sed -e 's/^NumberLong("\?//' -e 's/"\?)$//')"
+	checkPoint="$(mongo --quiet "$mongodb_endpoint" --eval 'var c = db.tasks.find({_id:"checkPoint"}); c.hasNext() ? ((cp = c.next()).checkPoint ? cp.checkPoint : NumberLong("0")) : NumberLong("0")' | sed -e 's/^NumberLong("\?//' -e 's/"\?)$//')"
 
 	if [ "$checkPoint" = "" -o "$checkPoint" = "0" ]; then
 		# Full initial sync
@@ -280,7 +317,7 @@ function _ticky_monitor {
 }
 
 function _ticky_list {
-	mongo "$mongodb_endpoint" --quiet --eval '
+	mongo --quiet "$mongodb_endpoint" --eval '
 
 		var lorem = {"1": ["a"], "2": ["ac", "ad", "at", "et", "eu", "id", "in", "mi", "ut"], "3": ["cum", "dui", "est", "leo", "mus", "nam", "nec", "non", "per", "sed", "sem", "sit", "vel"], "4": ["amet", "ante", "arcu", "cras", "diam", "eget", "elit", "erat", "eros", "nibh", "nisi", "nisl", "nunc", "odio", "orci", "pede", "quam", "quis", "urna", "xdis"], "5": ["augue", "class", "dolor", "donec", "etiam", "felis", "fusce", "ipsum", "justo", "lacus", "lorem", "magna", "massa", "metus", "morbi", "neque", "nulla", "proin", "purus", "risus", "velit", "vitae"], "6": ["aenean", "aptent", "auctor", "congue", "cursus", "lectus", "libero", "ligula", "litora", "luctus", "magnis", "mattis", "mauris", "mollis", "montes", "nostra", "nullam", "ornare", "sapien", "semper", "sociis", "taciti", "tellus", "tortor", "turpis", "varius"], "7": ["aliquam", "aliquet", "blandit", "commodo", "conubia", "dapibus", "egestas", "euismod", "feugiat", "gravida", "iaculis", "integer", "lacinia", "laoreet", "natoque", "posuere", "potenti", "pretium", "quisque", "sodales", "vivamus", "viverra"], "8": ["accumsan", "faucibus", "inceptos", "interdum", "nascetur", "pharetra", "placerat", "praesent", "pulvinar", "sagittis", "sociosqu", "suscipit", "torquent", "ultrices", "vehicula", "volutpat"], "9": ["consequat", "convallis", "curabitur", "dignissim", "elementum", "facilisis", "fermentum", "hendrerit", "himenaeos", "imperdiet", "malesuada", "penatibus", "phasellus", "porttitor", "ridiculus", "tincidunt", "tristique", "ultricies", "vulputate"], "10": ["adipiscing", "parturient", "vestibulum"], "11": ["condimentum", "scelerisque", "suspendisse", "ullamcorper"], "12": ["consectetuer", "pellentesque", "sollicitudin"], "max": 12};
 

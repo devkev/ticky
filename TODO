@@ -53,7 +53,7 @@ DONE - how to demo this - lorem ipsum substitutions?!
       {"id2etag":{"607787cc1b5c522c9bab4130":"gf5kaz1m"},"id2error":{}}
     then do a normal sync (almost certainly in response to websocket)
 
-    sortOrder is negative current nanosecs since epoch
+    sortOrder is negative current microsecs since epoch
 
       {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1615732337016832,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":0,"projectId":"project id goes here, eg. $inboxId","kind":null,"createdTime":"2021-04-15T00:31:54.000+0000","modifiedTime":"2021-04-15T00:31:54.000+0000","title":"another test","tags":[],"timeZone":"Australia/Sydney","content":"","id":"6077897a1b5c522c9bab4131"}],"update":[],"delete":[]}
       {
