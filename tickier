@@ -11,6 +11,11 @@ inboxId = db.tasks.find_one( { '_id': 'inboxId' } )['inboxId']
 #print(inboxId)
 
 
+class PlainButton(urwid.Button):
+    # still has a space char on the left/right of the button. good enough for now.
+    button_left = urwid.Text('')
+    button_right = urwid.Text('')
+
 class Model(dict):
     """
     A simple model that wraps mongodb document
@@ -36,7 +41,7 @@ class Task(Model):
             priority = 'priority_medium'
         elif self.priority == 5:
             priority = 'priority_high'
-        button = urwid.Button(str(self))
+        button = PlainButton(str(self))
         urwid.connect_signal(button, 'click', item_chosen, self)
         return urwid.AttrMap(button, priority, focus_map='reversed_'+priority)
 
