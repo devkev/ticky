@@ -16,6 +16,35 @@ class PlainButton(urwid.Button):
     button_left = urwid.Text('')
     button_right = urwid.Text('')
 
+
+class TaskWidget(urwid.WidgetWrap):
+    def sizing(self):
+        return frozenset([FLOW])
+
+    def __init__(self, task):
+        self.__super.__init__(None)
+        self._task = task
+        self._button = PlainButton(str(self._task))
+        urwid.connect_signal(self._button, 'click', item_chosen, self)
+        self._w = urwid.AttrMap(self._button, self._priority(), focus_map='focused_'+self._priority())
+
+    def _priority(self):
+        priority = None
+        if self._task.priority == 3:
+            priority = 'medium'
+        elif self._task.priority == 5:
+            priority = 'high'
+        if self._task.selected:
+            priority = 'selected_' + priority
+        return priority
+
+    def toggle_selection(self):
+        self._task.selected = not self._task.selected
+        self._button.set_label(str(self._task))
+        self._w = urwid.AttrMap(self._button, self._priority(), focus_map='focused_'+self._priority())
+
+
+
 class Model(dict):
     """
     A simple model that wraps mongodb document
@@ -36,16 +65,6 @@ class Task(Model):
         if self.selected:
             bullet = "*"
         return f' {bullet} {self.title}'
-
-    def create_widget(self):
-        priority = None
-        if self.priority == 3:
-            priority = 'priority_medium'
-        elif self.priority == 5:
-            priority = 'priority_high'
-        button = PlainButton(str(self))
-        urwid.connect_signal(button, 'click', item_chosen, self)
-        return urwid.AttrMap(button, priority, focus_map='reversed_'+priority)
 
 
 
@@ -81,33 +100,24 @@ def query_day(day, sort=1):
 palette = [
         ('reversed', 'standout', ''),
         ('heading', 'bold, white', 'black'),
-        ('priority_medium', 'bold, brown', 'black'),
-        ('priority_high', 'bold, dark red', 'black'),
-        ('reversed_priority_medium', 'bold, white', 'dark gray'),
-        ('reversed_priority_high', 'bold, white', 'dark red'),
+        ('medium', 'bold, brown', 'black'),
+        ('high', 'bold, dark red', 'black'),
+        ('focused_medium', 'bold, white', 'dark gray'),
+        ('focused_high', 'bold, white', 'dark red'),
+        ('selected_medium', 'bold, brown', 'dark blue'),
+        ('selected_high', 'bold, white', 'light blue'),
+        ('focused_selected_medium', 'black', 'white'),
+        ('focused_selected_high', 'black', 'white'),
     ]
 
 def build_menu(title, choices):
     this_menu = [urwid.Text(('heading',title))]
     for c in choices:
-        this_menu.append(c.create_widget())
+        this_menu.append(TaskWidget(c))
     return this_menu
 
 def item_chosen(button, choice):
-    #button.selected = True
-    choice.selected = not choice.selected
-
-    #button.set_label("*** " + str(choice) + " ***")
-    # FIXME: this isn't great - how to completely replace the widget?
-    button.set_label(str(choice))
-    #button = choice.create_widget()
-    #button.original_widget = choice.create_widget()
-
-    #response = urwid.Text([u'You chose ', repr(choice), u'\n'])
-    #done = urwid.Button(u'Ok')
-    #urwid.connect_signal(done, 'click', exit_program)
-    #main.original_widget = urwid.Filler(urwid.Pile([response,
-    #    urwid.AttrMap(done, None, focus_map='reversed')]))
+    choice.toggle_selection()
 
 def exit_program(button):
     raise urwid.ExitMainLoop()
