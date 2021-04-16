@@ -10,14 +10,23 @@ db = mongo.get_default_database()
 inboxId = db.tasks.find_one( { '_id': 'inboxId' } )['inboxId']
 #print(inboxId)
 
+urwid.Widget._command_map['j'] = urwid.CURSOR_DOWN
+urwid.Widget._command_map['k'] = urwid.CURSOR_UP
+urwid.Widget._command_map['h'] = urwid.CURSOR_LEFT
+urwid.Widget._command_map['l'] = urwid.CURSOR_RIGHT
+urwid.Widget._command_map['ctrl b'] = urwid.CURSOR_PAGE_UP
+urwid.Widget._command_map['ctrl f'] = urwid.CURSOR_PAGE_DOWN
+urwid.Widget._command_map['0'] = urwid.CURSOR_MAX_LEFT
+urwid.Widget._command_map['$'] = urwid.CURSOR_MAX_RIGHT
 
-class PlainButton(urwid.Button):
-    # still has a space char on the left/right of the button. good enough for now.
-    button_left = urwid.Text('')
-    button_right = urwid.Text('')
-
+class PlainButton(urwid.Text):
+    ignore_focus = False
+    _selectable = True
 
 class TaskWidget(urwid.WidgetWrap):
+    ignore_focus = False
+    _selectable = True
+
     def sizing(self):
         return frozenset([FLOW])
 
@@ -25,7 +34,6 @@ class TaskWidget(urwid.WidgetWrap):
         self.__super.__init__(None)
         self._task = task
         self._button = PlainButton(str(self._task))
-        urwid.connect_signal(self._button, 'click', item_chosen, self)
         self._w = urwid.AttrMap(self._button, self._priority(), focus_map='focused_'+self._priority())
 
     def _priority(self):
@@ -40,9 +48,16 @@ class TaskWidget(urwid.WidgetWrap):
 
     def toggle_selection(self):
         self._task.selected = not self._task.selected
-        self._button.set_label(str(self._task))
+        self._button.set_text(str(self._task))
         self._w = urwid.AttrMap(self._button, self._priority(), focus_map='focused_'+self._priority())
 
+    def keypress(self, size, key):
+        if self._command_map[key] == urwid.ACTIVATE:
+            self.toggle_selection()
+        else:
+            return key
+
+TaskWidget._command_map['t'] = urwid.ACTIVATE
 
 
 class Model(dict):
@@ -115,9 +130,6 @@ def build_menu(title, choices):
     for c in choices:
         this_menu.append(TaskWidget(c))
     return this_menu
-
-def item_chosen(button, choice):
-    choice.toggle_selection()
 
 def exit_program(button):
     raise urwid.ExitMainLoop()
