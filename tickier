@@ -65,8 +65,14 @@ class TaskWidget(urwid.WidgetWrap):
     def __init__(self, task):
         self.__super.__init__(None)
         self._task = task
+        self._update_widget()
+
+    def _update_widget(self):
         self._button = PlainButton(str(self._task))
-        self._w = urwid.AttrMap(self._button, self._priority(), focus_map='focused_'+self._priority())
+        self._main = urwid.Columns( [
+            ('fixed', 3, urwid.Text(" " + self._task.bullet() + " ")),
+            self._button ] )
+        self._w = urwid.AttrMap(self._main, self._priority(), focus_map='focused_'+self._priority())
 
     def _priority(self):
         priority = None
@@ -80,8 +86,7 @@ class TaskWidget(urwid.WidgetWrap):
 
     def toggle_selection(self):
         self._task.selected = not self._task.selected
-        self._button.set_text(str(self._task))
-        self._w = urwid.AttrMap(self._button, self._priority(), focus_map='focused_'+self._priority())
+        self._update_widget()
 
     def keypress(self, size, key):
         if self._command_map[key] == urwid.ACTIVATE:
@@ -101,7 +106,7 @@ class Model(dict):
     __setattr__ = dict.__setitem__
 
 class Task(Model):
-    def __str__(self):
+    def bullet(self):
         #bullet = "□"
         bullet = "□"
         #bullet = "▢"
@@ -110,11 +115,16 @@ class Task(Model):
             bullet = "▤"
             #bullet = "▣"
         if self.selected:
-            bullet = "*"
+            #bullet = "*"
+            bullet = "◉"
+        return bullet
+
+    def __str__(self):
         title = self.title
         if do_lorem:
             title = loremificate(title)
-        return f' {bullet} {title}'
+        #return f' {self.bullet()} {title}'
+        return f'{title}'
 
 
 
@@ -171,18 +181,20 @@ def build_menu(title, choices):
 def handle_input(key):
     if key in ('q', 'Q'):
         raise urwid.ExitMainLoop()
-    elif key in ('x'):
+    elif key == 'x':
         # mark as completed
         pass
-    elif key in ('>'):
+    elif key == '>':
         # move later by one day
         pass
-    elif key in ('<'):
+    elif key == '<':
         # move earlier by one day
         pass
 
 
 body = []
+body += build_menu(u'DAY BEFORE YESTERDAY', query_day(day(-2)))
+body.append(urwid.Divider())
 body += build_menu(u'YESTERDAY', query_day(day(-1)))
 body.append(urwid.Divider())
 body += build_menu(u'TODAY', query_day(day()))

@@ -553,8 +553,8 @@ function _ticky_full {
 	local width="${1:-$(( ${COLUMNS:-200} / $num_columns - 4 ))}"
 
 	col0="$(_ticky_backlog "$width")"
-	col1="$(_ticky_yesterday "$width" ; _ticky_earlier_this_week "$width" ; _ticky_earlier "$width")"
-	col2="$(_ticky_today "$width" ; _ticky_tomorrow "$width")"
+	col1="$(_ticky_earlier_this_week "$width" ; _ticky_earlier "$width")"
+	col2="$(_ticky_yesterday "$width" ; _ticky_today "$width" ; _ticky_tomorrow "$width")"
 	col3="$(_ticky_rest_of_week "$width" ; _ticky_later "$width")"
 
 	col0_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col0")"
@@ -600,8 +600,8 @@ function _ticky_all {
 	local num_columns=3
 	local width="${1:-$(( ${COLUMNS:-200} / $num_columns - 4 ))}"
 
-	col1="$(_ticky_yesterday "$width" ; _ticky_earlier_this_week "$width" ; _ticky_last_fortnight "$width")"
-	col2="$(_ticky_today "$width" ; _ticky_tomorrow "$width")"
+	col1="$(_ticky_earlier_this_week "$width" ; _ticky_last_fortnight "$width")"
+	col2="$(_ticky_yesterday "$width" ; _ticky_today "$width" ; _ticky_tomorrow "$width")"
 	col3="$(_ticky_rest_of_week "$width" ; _ticky_later "$width")"
 
 	col1_width="$(awk '{if (m < length) m = length} END {print m}' <<<"$col1")"
