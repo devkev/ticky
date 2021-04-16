@@ -131,8 +131,9 @@ def build_menu(title, choices):
         this_menu.append(TaskWidget(c))
     return this_menu
 
-def exit_program(button):
-    raise urwid.ExitMainLoop()
+def check_for_exit(key):
+    if key in ('Q'):
+        raise urwid.ExitMainLoop()
 
 
 body = []
@@ -148,7 +149,7 @@ main = urwid.Padding(urwid.ListBox(urwid.SimpleFocusListWalker(body)), left=0, r
 #    valign='middle', height=('relative', 100),
 #    min_width=10, min_height=9)
 #urwid.MainLoop(top, palette=[('reversed', 'standout', '')]).run()
-urwid.MainLoop(main, palette).run()
+urwid.MainLoop(main, palette, unhandled_input=check_for_exit).run()
 
 
 
