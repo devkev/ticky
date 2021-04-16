@@ -3,6 +3,38 @@
 import urwid
 import pymongo
 from datetime import datetime, timedelta
+import re
+import hashlib
+import os
+
+
+lorem = {1: ['a'], 2: ['ac', 'ad', 'at', 'et', 'eu', 'id', 'in', 'mi', 'ut'], 3: ['cum', 'dui', 'est', 'leo', 'mus', 'nam', 'nec', 'non', 'per', 'sed', 'sem', 'sit', 'vel'], 4: ['amet', 'ante', 'arcu', 'cras', 'diam', 'eget', 'elit', 'erat', 'eros', 'nibh', 'nisi', 'nisl', 'nunc', 'odio', 'orci', 'pede', 'quam', 'quis', 'urna', 'xdis'], 5: ['augue', 'class', 'dolor', 'donec', 'etiam', 'felis', 'fusce', 'ipsum', 'justo', 'lacus', 'lorem', 'magna', 'massa', 'metus', 'morbi', 'neque', 'nulla', 'proin', 'purus', 'risus', 'velit', 'vitae'], 6: ['aenean', 'aptent', 'auctor', 'congue', 'cursus', 'lectus', 'libero', 'ligula', 'litora', 'luctus', 'magnis', 'mattis', 'mauris', 'mollis', 'montes', 'nostra', 'nullam', 'ornare', 'sapien', 'semper', 'sociis', 'taciti', 'tellus', 'tortor', 'turpis', 'varius'], 7: ['aliquam', 'aliquet', 'blandit', 'commodo', 'conubia', 'dapibus', 'egestas', 'euismod', 'feugiat', 'gravida', 'iaculis', 'integer', 'lacinia', 'laoreet', 'natoque', 'posuere', 'potenti', 'pretium', 'quisque', 'sodales', 'vivamus', 'viverra'], 8: ['accumsan', 'faucibus', 'inceptos', 'interdum', 'nascetur', 'pharetra', 'placerat', 'praesent', 'pulvinar', 'sagittis', 'sociosqu', 'suscipit', 'torquent', 'ultrices', 'vehicula', 'volutpat'], 9: ['consequat', 'convallis', 'curabitur', 'dignissim', 'elementum', 'facilisis', 'fermentum', 'hendrerit', 'himenaeos', 'imperdiet', 'malesuada', 'penatibus', 'phasellus', 'porttitor', 'ridiculus', 'tincidunt', 'tristique', 'ultricies', 'vulputate'], 10: ['adipiscing', 'parturient', 'vestibulum'], 11: ['condimentum', 'scelerisque', 'suspendisse', 'ullamcorper'], 12: ['consectetuer', 'pellentesque', 'sollicitudin'], 'max': 12}
+
+wordmatcher = re.compile(r'([^A-Za-z]*)([A-Za-z]*)')
+
+do_lorem = os.environ.get("TICKY_LOREM", "false") == "true"
+
+def loremificate(line):
+    r = ""
+    #print(re.findall(wordmatcher, line))
+    for (prefix, word) in re.findall(wordmatcher, line):
+        thislen = len(word)
+        if thislen > 0:
+            if thislen > lorem['max']:
+                thislen = lorem['max']
+            #newword = random.choice(lorem[len(word)])
+            newword = lorem[thislen][int(hashlib.sha1(word.encode('utf-8')).hexdigest(), 16) % len(lorem[thislen])]
+            caps = []
+            for i in range(len(word)):
+                letter = word[i]
+                if letter >= 'A' and letter <= 'Z':
+                    caps.append(i)
+            word = newword
+            for i in caps:
+                word = word[:i] + word[i].upper() + word[i+1:]
+        r += prefix + word
+    return r
+
 
 mongo = pymongo.MongoClient('mongodb://localhost:27017/ticky')
 db = mongo.get_default_database()
@@ -79,7 +111,10 @@ class Task(Model):
             #bullet = "▣"
         if self.selected:
             bullet = "*"
-        return f' {bullet} {self.title}'
+        title = self.title
+        if do_lorem:
+            title = loremificate(title)
+        return f' {bullet} {title}'
 
 
 

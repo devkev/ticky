@@ -2,7 +2,7 @@
 
 import sys
 import re
-import random
+#import random
 import hashlib
 
 lorem = {}
@@ -16,7 +16,8 @@ with open("lorem-words") as f:
         lorem[len(word)].append(word)
         if maxlen < len(word):
             maxlen = len(word)
-print(str(lorem))
+lorem["max"] = maxlen
+print(repr(lorem))
 
 wordmatcher = re.compile(r'([^A-Za-z]*)([A-Za-z]*)')
 
