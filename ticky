@@ -536,11 +536,30 @@ function _ticky_backlog {
 		] )' "Backlog" true "$1"
 }
 
+function _ticky_divider {
+	#local line='-'
+	#local line='_'
+	#local line='─'
+	local line='━'
+	printf "\e[1;37m"
+	printf "%0.s$line" $(seq 1 $(($1 + 3)))
+	printf "\e[0000m\n\n"
+}
+
 function _ticky_summary {
 	local width="${1:-$(( ${COLUMNS:-200} - 4 ))}"
-	_ticky_day_before_yesterday "$width"
-	_ticky_yesterday "$width"
+
+	_ticky_divider "$width"
+
 	_ticky_today "$width"
+
+	_ticky_divider "$width"
+
+	_ticky_yesterday "$width"
+	_ticky_day_before_yesterday "$width"
+
+	_ticky_divider "$width"
+
 	_ticky_tomorrow "$width"
 	_ticky_day_after_tomorrow "$width"
 }
