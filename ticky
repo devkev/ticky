@@ -383,7 +383,7 @@ function _show_list {
 		var red = ESC + "[1;31m";
 		var green = ESC + "[0032m";
 		var white = ESC + "[1;37m";
-		var yellow = ESC + "[0033m";
+		var yellow = ESC + "[1;33m";
 		var NBSP = String.fromCharCode(0xA0);
 
 		var inboxId = db.tasks.findOne( { _id: "inboxId" } ).inboxId;
@@ -464,20 +464,28 @@ function _show_date {
 		] )' "$2" "$3" "$4"
 }
 
-function _ticky_today {
-	_show_date "\"$(date "+%Y%m%d")\"" "TODAY" true "$1"
+function _today_YYYYMMDD {
+	date "+%Y%m%d"
 }
 
-function _adjacent_day {
+function _adjacent_day_YYYYMMDD {
 	date -d "@$(( $(date "+%s") + 86400 * $1 ))" "+%Y%m%d"
 }
 
+function _ticky_today {
+	_show_date "\"$(_today_YYYYMMDD)\"" "TODAY" true "$1"
+}
+
 function _ticky_adjacent_day {
-	_show_date "\"$(_adjacent_day "$1")\"" "$2" "$3" "$4"
+	_show_date "\"$(_adjacent_day_YYYYMMDD "$1")\"" "$2" "$3" "$4"
 }
 
 function _ticky_tomorrow {
 	_ticky_adjacent_day 1 "Tomorrow" true "$1"
+}
+
+function _ticky_day_after_tomorrow {
+	_ticky_adjacent_day 2 "Day After Tomorrow" true "$1"
 }
 
 function _ticky_yesterday {
@@ -489,31 +497,31 @@ function _ticky_day_before_yesterday {
 }
 
 function _ticky_earlier_this_week {
-	_show_date "{ \$lte: \"$(_adjacent_day -2)\", \$gte: \"$(_adjacent_day -7)\" }" "Earlier this week" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day_YYYYMMDD -2)\", \$gte: \"$(_adjacent_day_YYYYMMDD -7)\" }" "Earlier this week" true "$1" -1
 }
 
 function _ticky_last_week {
-	_show_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -14)\" }" "Last week" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day_YYYYMMDD -8)\", \$gte: \"$(_adjacent_day_YYYYMMDD -14)\" }" "Last week" true "$1" -1
 }
 
 function _ticky_last_fortnight {
-	_show_date "{ \$lte: \"$(_adjacent_day -8)\", \$gte: \"$(_adjacent_day -21)\" }" "Last fortnight" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day_YYYYMMDD -8)\", \$gte: \"$(_adjacent_day_YYYYMMDD -21)\" }" "Last fortnight" true "$1" -1
 }
 
 function _ticky_earlier {
-	_show_date "{ \$lt: \"$(_adjacent_day -7)\" }" "Earlier" true "$1" -1
+	_show_date "{ \$lt: \"$(_adjacent_day_YYYYMMDD -7)\" }" "Earlier" true "$1" -1
 }
 
 function _ticky_rest_of_week {
-	_show_date "{ \$gte: \"$(_adjacent_day 2)\", \$lte: \"$(_adjacent_day 7)\" }" "Rest of week" true "$1" 1
+	_show_date "{ \$gte: \"$(_adjacent_day_YYYYMMDD 2)\", \$lte: \"$(_adjacent_day_YYYYMMDD 7)\" }" "Rest of week" true "$1" 1
 }
 
 function _ticky_next_week {
-	_show_date "{ \$gte: \"$(_adjacent_day 8)\", \$lte: \"$(_adjacent_day 14)\" }" "Next week" true "$1" 1
+	_show_date "{ \$gte: \"$(_adjacent_day_YYYYMMDD 8)\", \$lte: \"$(_adjacent_day_YYYYMMDD 14)\" }" "Next week" true "$1" 1
 }
 
 function _ticky_later {
-	_show_date "{ \$gt: \"$(_adjacent_day 7)\" }" "Later" true "$1"
+	_show_date "{ \$gt: \"$(_adjacent_day_YYYYMMDD 7)\" }" "Later" true "$1"
 }
 
 function _ticky_overdue {
@@ -529,10 +537,12 @@ function _ticky_backlog {
 }
 
 function _ticky_summary {
-	_ticky_day_before_yesterday "$1"
-	_ticky_yesterday "$1"
-	_ticky_today "$1"
-	_ticky_tomorrow "$1"
+	local width="${1:-$(( ${COLUMNS:-200} - 4 ))}"
+	_ticky_day_before_yesterday "$width"
+	_ticky_yesterday "$width"
+	_ticky_today "$width"
+	_ticky_tomorrow "$width"
+	_ticky_day_after_tomorrow "$width"
 }
 
 _NL='

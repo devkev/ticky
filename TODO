@@ -87,6 +87,11 @@ DONE         "delete": []
 DONE       }
 
 
+- 'ticky monitor' have a lock to ensure only one copy running at any time
+
+- 'ticky monitor/wait_for_push/sync' clean up debug output
+
+
 - being able to quickly mark tasks as done
   - POST batch/task
       {"add":[],"update":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":3,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-1614632825389056,"startDate":"2021-04-14T14:00:00.000+0000","isFloating":false,"status":2,"projectId":"project id goes here, eg. $inboxId","kind":null,"etag":"gf5kaz1m","createdTime":"2021-04-15T00:24:44.000+0000","modifiedTime":"2021-04-15T00:24:44.000+0000","isCalendarNew":false,"title":"this is a test","completedTime":"2021-04-15T00:34:13.000+0000","tags":[],"timeZone":"Australia/Sydney","content":"","id":"607787cc1b5c522c9bab4130"}],"delete":[]}
