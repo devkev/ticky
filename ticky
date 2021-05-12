@@ -549,7 +549,7 @@ function _ticky_divider {
 function _ticky_summary {
 	local width="${1:-$(( ${COLUMNS:-200} - 4 ))}"
 
-	_ticky_divider "$width"
+	echo
 
 	_ticky_today "$width"
 
