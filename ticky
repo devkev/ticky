@@ -496,8 +496,12 @@ function _ticky_day_before_yesterday {
 	_ticky_adjacent_day -2 "Day Before Yesterday" true "$1"
 }
 
+function _ticky_3_days_ago {
+	_ticky_adjacent_day -3 "3 Days Ago" true "$1"
+}
+
 function _ticky_earlier_this_week {
-	_show_date "{ \$lte: \"$(_adjacent_day_YYYYMMDD -2)\", \$gte: \"$(_adjacent_day_YYYYMMDD -7)\" }" "Earlier this week" true "$1" -1
+	_show_date "{ \$lte: \"$(_adjacent_day_YYYYMMDD -${2:-2})\", \$gte: \"$(_adjacent_day_YYYYMMDD -7)\" }" "Earlier this week" true "$1" -1
 }
 
 function _ticky_last_week {
@@ -557,6 +561,8 @@ function _ticky_summary {
 
 	_ticky_yesterday "$width"
 	_ticky_day_before_yesterday "$width"
+	_ticky_3_days_ago "$width"
+	_ticky_earlier_this_week "$width" 4
 
 	_ticky_divider "$width"
 
