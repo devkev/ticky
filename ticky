@@ -14,7 +14,8 @@ register_file="${register_file:-$ticky_dir/.register}"
 deviceid_file="${deviceid_file:-$ticky_dir/.deviceid}"
 task_file="${task_file:-$ticky_dir/.task}"
 
-ticktick_web_app_version_claim="3880"
+ticktick_web_app_version_claim="4580"
+chrome_version_claim="118.0.0.0"
 api_hostname="api.ticktick.com"
 api_base="https://$api_hostname/api/v2/"
 wss_url="wss://wss.ticktick.com/web"
@@ -82,7 +83,7 @@ function _get_sessionid {
 function _get_xdevice {
 	_get_deviceid
 	_get_sessionid
-	xdevice='{"platform":"web","os":"Linux x86_64","device":"Chrome 88.0.4324.182","name":"","version":'"$ticktick_web_app_version_claim"',"id":"'"$deviceid"'","channel":"website","campaign":"","websocket":"'"$sessionid"'"}'
+	xdevice='{"platform":"web","os":"Linux x86_64","device":"Chrome '"$chrome_version_claim"'","name":"","version":'"$ticktick_web_app_version_claim"',"id":"'"$deviceid"'","channel":"website","campaign":"","websocket":"'"$sessionid"'"}'
 }
 
 function _api_call_base {
@@ -93,7 +94,7 @@ function _api_call_base {
 		-H 'Accept-Language: en-GB,en-US;q=0.9,en;q=0.8' \
 		-H 'Origin: https://ticktick.com' \
 		-H 'Referer: https://ticktick.com/' \
-		-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36' \
+		-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/'"$chrome_version_claim"' Safari/537.36' \
 		"$@"
 }
 
