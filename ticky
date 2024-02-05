@@ -14,7 +14,7 @@ register_file="${register_file:-$ticky_dir/.register}"
 deviceid_file="${deviceid_file:-$ticky_dir/.deviceid}"
 task_file="${task_file:-$ticky_dir/.task}"
 
-ticktick_web_app_version_claim="4580"
+ticktick_web_app_version_claim="5070"
 chrome_version_claim="118.0.0.0"
 api_hostname="api.ticktick.com"
 api_base="https://$api_hostname/api/v2/"
@@ -25,31 +25,26 @@ websocket_reconnect_secs="5"
 
 mongodb_endpoint="mongodb://localhost:27017/ticky"
 
-function __gettoken {
-	if type -t jq > /dev/null; then
-		jq -r '.token' < "$login_file"
-	else
-		awk '{printf("%s%s", NR==1?"":" ", $0)}' < "$login_file" | sed -e 's/^.*"token":"//' -e 's/".*$//'
-	fi
-}
-
-function __generate_cookie_file {
-	(
-		umask 077
-		{
-			echo -ne "$api_hostname\tFALSE\t/\tTRUE\t${cookie_expiry}\tt\t"
-			__gettoken
-		} > "$cookie_file"
-	)
-}
-
 function _ticky_login {
+	if [ "$1" == "" ]; then
+		echo "ticky login: Error: supply your 'pass' name" 1>&2
+		exit 1
+	fi
 	umask 077
-	pass web/ticktick \
+	_get_xdevice --no-session
+	pass "$1" \
 		| awk 'NR==1{p=$0} NR>2 && $1 == "Username:" {u=$2} END{printf("{\"username\":\"%s\",\"password\":\"%s\"}",u,p)}' \
-		| curl --silent --show-error -d '@-' -H 'Content-Type: application/json' "$api_base"'user/signon?wc=true&remember=true' \
+		| curl --silent --show-error \
+			--cookie-jar "$cookie_file" \
+			-d '@-' \
+			-H 'Content-Type: application/json' \
+			-H "X-Device: $xdevice" \
+			-H 'Accept: */*' \
+			-H 'Origin: https://ticktick.com' \
+			-H 'Referer: https://ticktick.com/' \
+			-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/'"$chrome_version_claim"' Safari/537.36' \
+			"$api_base"'user/signon?wc=true&remember=true' \
 		> "$login_file"
-	__generate_cookie_file
 }
 
 function _ticky_export {
@@ -82,7 +77,12 @@ function _get_sessionid {
 
 function _get_xdevice {
 	_get_deviceid
-	_get_sessionid
+	if [ "$1" == "--no-session" ]; then
+		shift
+		sessionid=""
+	else
+		_get_sessionid
+	fi
 	xdevice='{"platform":"web","os":"Linux x86_64","device":"Chrome '"$chrome_version_claim"'","name":"","version":'"$ticktick_web_app_version_claim"',"id":"'"$deviceid"'","channel":"website","campaign":"","websocket":"'"$sessionid"'"}'
 }
 
